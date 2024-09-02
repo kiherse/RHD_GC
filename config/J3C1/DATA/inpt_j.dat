@@ -1,0 +1,41 @@
+Inpt_j file: In the case of restarting from a previous file 
+gamma, velb, rhob, machb, dk, psh, nn, mm 
+are reset to their values in the restarting file   
+gamma   , 1.3333333333333
+velb    , 0.80
+rhob    , 3.e-9
+rhoeb   , 2.7e-9
+temb    , 2.e10
+machb   , 18.2
+radius  , 1000.0
+cdenst  , 0.1
+shift   , 0.0
+ms      , 8
+q0      , 0.
+fg      , 0.0105556
+rm      , 7.8e3
+oang    , 0.1
+dk1     , 1.0
+dk2     , 1.0
+psh1    , 1.2e3
+psh2    , 52.e3
+nn      , 2.0
+mm1     , 2.19
+mm2     , 1.14
+ipr     , 2
+tem0    , 4.9e6
+tem1    , 1.7e7
+mclouds , 0
+alpn    , 2.4
+betn    , 1.43
+gamn    , 0.0
+rbn     , 262.3
+brt     , 0
+t0      , 0.00
+t1      , 0.00
+vptbd   , 0.983330
+rptbd   , 0.0230
+pptbd   , 0.03080
+itdelay , 0 
+suffixd ,AAA
+
