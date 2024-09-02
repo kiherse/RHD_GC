@@ -532,32 +532,32 @@
          call par_barrier( ) 
          nbegin = nstep + 1
 
-         ! Print initial conditions but when restarting (except gamma)
-         if (cartrank == 0) then
-            print*,' '
-            print*,'---------------------------------------------------------------------'
-            print*,'RESTART: variables as in input_j.dat'
-            print*,gamma_ad,velb,rhob,rhoeb,temb,machb,radius,cdenst,shift,ms,q0,fg,rm
-            print*,oang,dk1,dk2,psh1,psh2,nn,mm1,mm2,ipr,tem0,tem1,mclouds,alpn,betn,gamn
-            print*,rbn,brt,t0,t1,vptbd,rptbd,pptbd,itdelay,suffixd
-            print*,' '
+         ! ! Print initial conditions but when restarting (except gamma)
+         ! if (cartrank == 0) then
+         !    print*,' '
+         !    print*,'---------------------------------------------------------------------'
+         !    print*,'RESTART: variables as in input_j.dat'
+         !    print*,gamma_ad,velb,rhob,rhoeb,temb,machb,radius,cdenst,shift,ms,q0,fg,rm
+         !    print*,oang,dk1,dk2,psh1,psh2,nn,mm1,mm2,ipr,tem0,tem1,mclouds,alpn,betn,gamn
+         !    print*,rbn,brt,t0,t1,vptbd,rptbd,pptbd,itdelay,suffixd
+         !    print*,' '
 
-            epsb = pb/(gamb - 1.)/rhob
-            ! the gamma is computed in the eosynge and hence cannot be used here,
-            ! we would need to redefine it with the eosynge of smth for getting the input gamma
-            hb   = 1.+ gamb*epsb
-            lofb = 1./sqrt(1.-velb*velb)
-            ! lk = (hb*lofb-1.)*rhob*rho_0a*lofb*acos(-1.)*(R_b)**2*velb*c**3 
-            lk = hb*lofb**2*rhob*rho_0a*acos(-1.)*(R_b)**2*velb*c**3 ! including rest mass
-            print*,' '
-            print*,'RESTART: jet physical input'
-            print*,'gamb,epsb,hb,lofb,rhob,rho_0a,R_b,velb:'
-            print*,gamb,epsb,hb,lofb,rhob,rho_0a,R_b,velb
-            print*,' '
-            print*,'Jet kinetic power (cgs)', lk
-            print*,'---------------------------------------------------------------------'
-            print*,' '
-         endif
+         !    epsb = pb/(gamb - 1.)/rhob
+         !    ! the gamma is computed in the eosynge and hence cannot be used here,
+         !    ! we would need to redefine it with the eosynge of smth for getting the input gamma
+         !    hb   = 1.+ gamb*epsb
+         !    lofb = 1./sqrt(1.-velb*velb)
+         !    ! lk = (hb*lofb-1.)*rhob*rho_0a*lofb*acos(-1.)*(R_b)**2*velb*c**3 
+         !    lk = hb*lofb**2*rhob*rho_0a*acos(-1.)*(R_b)**2*velb*c**3 ! including rest mass
+         !    print*,' '
+         !    print*,'RESTART: jet physical input'
+         !    print*,'gamb,epsb,hb,lofb,rhob,rho_0a,R_b,velb:'
+         !    print*,gamb,epsb,hb,lofb,rhob,rho_0a,R_b,velb
+         !    print*,' '
+         !    print*,'Jet kinetic power (cgs)', lk
+         !    print*,'---------------------------------------------------------------------'
+         !    print*,' '
+         ! endif
 
          ! Mass loading from stars  
          if (basenm(1:1) == 'J' .and. basenm(3:3) == 'M') then
@@ -588,18 +588,18 @@
          endif
       ENDIF
 
-      ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1) then
-      !    print*,'------------ MAIN: before main loop ---------------'
-      !    print*,'Time step: ',nstep
-      !    print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell 324 217 217'                                                        
-      !    print*,'Density and conserved density: ',physic(324,217,217)%densty,physic(324,217,217)%denstw
-      !    print*,'Pressure: ',physic(324,217,217)%pres
-      !    print*,'Internal energy: ',physic(324,217,217)%eps
-      !    print*,'Velocity: ',physic(324,217,217)%velx,physic(324,217,217)%vely,physic(324,217,217)%velz
-      !    print*,'Energy: ',physic(324,217,217)%energy
-      !    print*,'Moment: ',physic(324,217,217)%momenx,physic(324,217,217)%momeny,physic(324,217,217)%momenz
-      !    print*,'----------------------------------------------------'
-      ! endif
+      if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1) then
+         print*,'------------ MAIN: before main loop ---------------'
+         print*,'Time step: ',nstep
+         print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell 324 217 217'                                                        
+         print*,'Density and conserved density: ',physic(324,217,217)%densty,physic(324,217,217)%denstw
+         print*,'Pressure: ',physic(324,217,217)%pres
+         print*,'Internal energy: ',physic(324,217,217)%eps
+         print*,'Velocity: ',physic(324,217,217)%velx,physic(324,217,217)%vely,physic(324,217,217)%velz
+         print*,'Energy: ',physic(324,217,217)%energy
+         print*,'Moment: ',physic(324,217,217)%momenx,physic(324,217,217)%momeny,physic(324,217,217)%momenz
+         print*,'----------------------------------------------------'
+      endif
 
 !-------------------------------------------------------------- TIME EVOLUTION
 
@@ -677,19 +677,19 @@
 
                call intercambiaBoundPhysic( physic, nx, ny, nz, mnx5, mny5, mnz5, bndmny, bndmxy  )
 
-               ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1) then
-               !    print*,'------------- MAIN: before sweeps ----------------'
-               !    print*,'Time step:', nstep
-               !    print*,'Rkin:', rkin
-               !    print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell 324 217 217'                                                        
-               !    print*,'Density and conserved density: ',physic(324,217,217)%densty,physic(324,217,217)%denstw
-               !    print*,'Pressure: ',physic(324,217,217)%pres
-               !    print*,'Internal energy: ',physic(324,217,217)%eps
-               !    print*,'Velocity: ',physic(324,217,217)%velx,physic(324,217,217)%vely,physic(324,217,217)%velz
-               !    print*,'Energy and conserved energy: ',physic(324,217,217)%energy
-               !    print*,'Moment: ',physic(324,217,217)%momenx,physic(324,217,217)%momeny,physic(324,217,217)%momenz
-               !    print*,'----------------------------------------------------'
-               ! endif
+               if (mod(nstep,50) == 0  .and. rkin==1 .and. mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1) then
+                  print*,'------------- MAIN: before sweeps ----------------'
+                  print*,'Time step:', nstep
+                  print*,'Rkin:', rkin
+                  print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell 324 217 217'                                                        
+                  print*,'Density and conserved density: ',physic(324,217,217)%densty,physic(324,217,217)%denstw
+                  print*,'Pressure: ',physic(324,217,217)%pres
+                  print*,'Internal energy: ',physic(324,217,217)%eps
+                  print*,'Velocity: ',physic(324,217,217)%velx,physic(324,217,217)%vely,physic(324,217,217)%velz
+                  print*,'Energy and conserved energy: ',physic(324,217,217)%energy
+                  print*,'Moment: ',physic(324,217,217)%momenx,physic(324,217,217)%momeny,physic(324,217,217)%momenz
+                  print*,'----------------------------------------------------'
+               endif
 
                call sweeps( basenm, rkin, igodu, igeomx, igeomy, igeomz,            &
                bndmnx, bndmxx, bndmny, bndmxy, bndmnz, bndmxz,       &
@@ -705,28 +705,28 @@
                xznl, xzn, xznr, yznl, yzn, yznr, zznl, zzn, zznr,    &
                boundPosX, boundPosY, boundPosZ, grav, physic, curth )
 
-               ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1) then
-               !    ! print*,'------- MAIN: after sweeps, old parameters --------'
-               !    ! print*,'Time step: ',nstep
-               !    ! print*,'Rkin:', rkin
-               !    ! print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell 324 217 217'                                                        
-               !    ! print*,'Conserved density: ',physic(324,217,217)%odenstw                                                        
-               !    ! print*,'Leptonic conserved density: ',physic(324,217,217)%odenstew
-               !    ! print*,'Pressure: ',physic(324,217,217)%opres
-               !    ! print*,'Energy and conserved energy: ',physic(324,217,217)%oenergy
-               !    ! print*,'Moment: ',physic(324,217,217)%omomenx,physic(324,217,217)%omomeny,physic(324,217,217)%omomenz
-               !    print*,'---------- MAIN: after sweeps, new ones ------------'
-               !    print*,'Time step: ',nstep
-               !    print*,'Rkin:', rkin
-               !    print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell 324 217 217'                                                        
-               !    print*,'Density and conserved density: ',physic(324,217,217)%densty,physic(324,217,217)%denstw
-               !    print*,'Pressure: ',physic(324,217,217)%pres
-               !    print*,'Internal energy: ',physic(324,217,217)%eps
-               !    print*,'Velocity: ',physic(324,217,217)%velx,physic(324,217,217)%vely,physic(324,217,217)%velz
-               !    print*,'Energy and conserved energy: ',physic(324,217,217)%energy
-               !    print*,'Moment: ',physic(324,217,217)%momenx,physic(324,217,217)%momeny,physic(324,217,217)%momenz
-               !    print*,'----------------------------------------------------'
-               ! endif
+               if (mod(nstep,50) == 0  .and. rkin==1 .and. mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1) then
+                  ! print*,'------- MAIN: after sweeps, old parameters --------'
+                  ! print*,'Time step: ',nstep
+                  ! print*,'Rkin:', rkin
+                  ! print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell 324 217 217'                                                        
+                  ! print*,'Conserved density: ',physic(324,217,217)%odenstw                                                        
+                  ! print*,'Leptonic conserved density: ',physic(324,217,217)%odenstew
+                  ! print*,'Pressure: ',physic(324,217,217)%opres
+                  ! print*,'Energy and conserved energy: ',physic(324,217,217)%oenergy
+                  ! print*,'Moment: ',physic(324,217,217)%omomenx,physic(324,217,217)%omomeny,physic(324,217,217)%omomenz
+                  print*,'---------- MAIN: after sweeps, new ones ------------'
+                  print*,'Time step: ',nstep
+                  print*,'Rkin:', rkin
+                  print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell 324 217 217'                                                        
+                  print*,'Density and conserved density: ',physic(324,217,217)%densty,physic(324,217,217)%denstw
+                  print*,'Pressure: ',physic(324,217,217)%pres
+                  print*,'Internal energy: ',physic(324,217,217)%eps
+                  print*,'Velocity: ',physic(324,217,217)%velx,physic(324,217,217)%vely,physic(324,217,217)%velz
+                  print*,'Energy and conserved energy: ',physic(324,217,217)%energy
+                  print*,'Moment: ',physic(324,217,217)%momenx,physic(324,217,217)%momeny,physic(324,217,217)%momenz
+                  print*,'----------------------------------------------------'
+               endif
 
                ! Newton-Raphson for recovering the physical variables
                call getprfq3d( basenm, nx, ny, nz, mnx1, mnx5, mny5, mnz1, mnz5,     &

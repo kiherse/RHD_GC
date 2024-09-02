@@ -580,14 +580,14 @@
                   xer(j)   = rhoer(j)/rhor(j)
                   temr(j)  = pr(j) / (rhor(j)*( xer(j)/me + (1.0-xer(j))/mp )) 
 
-                  if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-                  j == 324 .and. i == 217 .and. k == 217) then
-                     print*,'------------------------------ Psgrav x: before Synge -----------------------------'
-                     print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell ',j,i,k
-                     print*,'me, mp, rhol, xel, teml, ul: ',me, mp, rhol(j), xel(j), teml(j), ul(j)
-                     print*,'pl, gaml, hl, csl, dpdrhl, dpdul: ',pl(j), gaml(j), hl(j), csl(j), dpdrhl(j), dpdul(j)                                   
-                     print*,'-----------------------------------------------------------------------------------------'
-                  endif
+                  ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
+                  ! j == 324 .and. i == 217 .and. k == 217) then
+                  !    print*,'------------------------------ Psgrav x: before Synge -----------------------------'
+                  !    print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell ',j,i,k
+                  !    print*,'me, mp, rhol, xel, teml, ul: ',me, mp, rhol(j), xel(j), teml(j), ul(j)
+                  !    print*,'pl, gaml, hl, csl, dpdrhl, dpdul: ',pl(j), gaml(j), hl(j), csl(j), dpdrhl(j), dpdul(j)                                   
+                  !    print*,'-----------------------------------------------------------------------------------------'
+                  ! endif
 
                enddo
 
@@ -611,16 +611,16 @@
                   er(j)    = tt4 - rr(j) - pr(j)
                   fr(j)    = fm(j)
 
-                  if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-                  j == 324 .and. i == 217 .and. k == 217) then
-                     print*,'------------------------------ Psgrav x: Riemann parameters -----------------------------'
-                     print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell ',j,i,k
-                     print*,'vell, velr, veltl, veltr, velttl, velttr, wl, wr: ', vell(j), velr(j), veltl(j), veltr(j), velttl(j), velttr(j), wl(j), wr(j) 
-                     print*,'csl, csr, pl, pr, hl, hr, dpdrhl, dpdrhr, dpdul: ',csl(j), csr(j), pl(j), pr(j), hl(j), hr(j), dpdrhl(j), dpdrhr(j), dpdul(j)
-                     print*,'dpdur, rl, rr, ml, mr, mtl, mtr: ',dpdur(j), rl(j), rr(j), ml(j), mr(j), mtl(j), mtr(j)
-                     print*,'mttl, mttr, el, er: ',mttl(j), mttr(j), el(j), er(j)                                       
-                     print*,'-----------------------------------------------------------------------------------------'
-                  endif
+                  ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
+                  ! j == 324 .and. i == 217 .and. k == 217) then
+                  !    print*,'------------------------------ Psgrav x: Riemann parameters -----------------------------'
+                  !    print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell ',j,i,k
+                  !    print*,'vell, velr, veltl, veltr, velttl, velttr, wl, wr: ', vell(j), velr(j), veltl(j), veltr(j), velttl(j), velttr(j), wl(j), wr(j) 
+                  !    print*,'csl, csr, pl, pr, hl, hr, dpdrhl, dpdrhr, dpdul: ',csl(j), csr(j), pl(j), pr(j), hl(j), hr(j), dpdrhl(j), dpdrhr(j), dpdul(j)
+                  !    print*,'dpdur, rl, rr, ml, mr, mtl, mtr: ',dpdur(j), rl(j), rr(j), ml(j), mr(j), mtl(j), mtr(j)
+                  !    print*,'mttl, mttr, el, er: ',mttl(j), mttr(j), el(j), er(j)                                       
+                  !    print*,'-----------------------------------------------------------------------------------------'
+                  ! endif
 
                enddo
 
@@ -635,15 +635,15 @@
                do j= fzn, nzn
                physic(j,i,k)%gravx = (mflx(j+1) - mflx(j))/abs(dx(j))
 
-               if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-               j == 324 .and. i == 217 .and. k == 217) then
-                  print*,'---------- Psgrav x: after Riemann ------------'
-                  print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell ',j,i,k
-                  print*,'Fluxes j+1 and j: ',mflx(j+1),mflx(j) 
-                  print*,'dx(j): ',dx(j)   
-                  print*,'Gravx: ',physic(j,i,k)%gravx                                              
-                  print*,'----------------------------------------------------------'
-               endif
+               ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
+               ! j == 324 .and. i == 217 .and. k == 217) then
+               !    print*,'---------- Psgrav x: after Riemann ------------'
+               !    print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell ',j,i,k
+               !    print*,'Fluxes j+1 and j: ',mflx(j+1),mflx(j) 
+               !    print*,'dx(j): ',dx(j)   
+               !    print*,'Gravx: ',physic(j,i,k)%gravx                                              
+               !    print*,'----------------------------------------------------------'
+               ! endif
 
                enddo
 
