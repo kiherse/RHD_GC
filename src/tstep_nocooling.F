@@ -137,6 +137,7 @@
 !$OMP DO SCHEDULE(static)
          do k=1, nz  
             do j= 1, ny
+
                do i= 1, nx
                   xe_s(i)   = physic(i,j,k)%denstye/physic(i,j,k)%densty
                   tem_s(i)  = physic(i,j,k)%pres / (physic(i,j,k)%densty*( xe_s(i)/me + (1.0-xe_s(i))/mp ))
@@ -185,6 +186,7 @@
                enddo
                
                do i= 1, nx
+                  
                   dtestmax = MAX( lambdx(i)/(xznr(i)-xznl(i)),               &
                   lambdy(i)/(yznr(j)-yznl(j)),               &
                   lambdz(i)/(zznr(k)-zznl(k)) ) / scrch3(i)
@@ -208,7 +210,8 @@
                      tem =  physic(i,j,k)%pres*m_0*cl**2/ (physic(i,j,k)%densty*    &
                             (xe/me + (1.0-xe)/mp))/kb
 
-                    if (tem < 1.e4) then
+                    if (tem < 1.e4 .or. ABS(physic(i,j,k)%velx) < 1.e-5 .or.  &
+                    ABS(physic(i,j,k)%vely) < 1.e-5 .or. ABS(physic(i,j,k)%velz) < 1.e-5) then
                        dedt = 0.
                        dtco  = 1.
 
