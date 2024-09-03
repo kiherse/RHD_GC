@@ -72,7 +72,7 @@ VPATH := $(SRCDIR) $(dir $(wildcard $(SRCDIR)/*/.))
 # SOURCES
 MODULE_SRC 	:=  modulos.F main3bu.F bndrybu.F coef.F eos.F filnam.F geom.F        \
       getprfq3d.F gridbu.F hydrow3.F initbu.F init_ext.F input.F pltout.F psgrav.F \
-      riem3dp.F tdelay.F tstep.F paralelo.F stmass0.F sweeps.F misc.F \
+      riem3dp.F tdelay.F tstep_nocooling.F paralelo.F stmass0.F sweeps_nocooling.F misc.F \
       restrt_hdf5.F rec_hdf5.F rst_hdf5.F  
 
 MAIN_SRC 	:= main3bu.F

@@ -2,15 +2,15 @@ first line of the inpt file
 second    
 third                                                                
 basenm  ,J3C0
-rst_file, 3
-rst_rec , 1
+rst_file, 0
+rst_rec , 0
 xd      , .5
 alpha   , 45.0
 nend    , 100000000 
 tmax    , 100000000.
 suffix  ,AA
 suffixd ,AAA
-irstrt  , 1
+irstrt  , 0
 nrstrt  , 100000000
 trstrt  , 100.
 nout    , 1000000000

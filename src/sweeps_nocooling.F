@@ -742,7 +742,7 @@
                   (basenm(1:1) == 'J'.and. basenm(2:2) == '3')) then ! .and. basenm(4:4) /= '0')) then
                      
                      ! Substracting the cooling energy
-                     if (ABS(physic(i,j,k)%velx) > 1.e-6 .or. ABS(physic(i,j,k)%vely) > 1.e-6 .or. ABS(physic(i,j,k)%velz) > 1.e-6) then
+                     if (ABS(physic(i,j,k)%velx) > 1.e-5 .or. ABS(physic(i,j,k)%vely) > 1.e-5 .or. ABS(physic(i,j,k)%velz) > 1.e-5) then
                         
                         xe_s  =  physic(i,j,k)%denstye/physic(i,j,k)%densty
                         meff= 1.0/9.1095e-28 * (xe_s + (1.0-xe_s)/1836.11)
