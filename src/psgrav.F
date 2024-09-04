@@ -453,7 +453,7 @@
                      x(j)    = 0.5*(xl(j)+xr(j))
 
                      if (basenm(3:3) == 'C') then                                               
-                        rho(j)  = rho(fzn)
+                        rho(j)  = rho(fzn) ! This is what we should change if we want to be more correct with the bndrybu
                         rhoe(j) =  rho(j)/1836.110
                         tem_s(1) = scr(fzn+ini,i+jni,k+kni)
                         tem_s(1) =  tem_s(1) *kb/m_0/c**2

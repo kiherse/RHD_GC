@@ -73,6 +73,7 @@ MODULE tipos
   type Tbounds
     real(rs):: rho
     real(rs):: pres
+    real(rs):: tem
   end type
 
   type Tphysic
