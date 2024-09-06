@@ -27,7 +27,8 @@
       shift, fg, rm, tem0, tem1, rorb, nmod, A0, gridly,      &
       fra, frs, pha, pa, rhoa, xzn, yzn, zzn, p, rho, rhoe,   &
       rhopr, vel, velt, veltt, f, x, xl, xr, dx,              &
-      ic_radius, ic_density, ic_pressure, fbounds, nbounds, nstep, nbegin)
+      ic_radius, ic_density, ic_pressure, fbounds, nbounds,   &
+      nstep, nbegin, fcortex, ncortex)
 
       USE parallel
       USE workarrays
@@ -54,6 +55,8 @@
       real(rs)   :: xzn(*), yzn(*), zzn(*)
       
       real(8), dimension(10000) :: ic_radius, ic_density, ic_pressure
+      
+      type(Tbounds) :: fcortex(:,:,:), ncortex(:,:,:)
 
 !------------------------------------------------------Output Variables
 
@@ -172,11 +175,19 @@
                ! COPY the same in bndmax = 2
 
                xe = 1.0/1836.11
+   
+               if (xyswp==1) then
+                  fcortex(i) = fcortex(i,j,l)
+               elseif (xyswp==2) then
+                  fcortex(i) = fcortex(l,i,j)
+               elseif (xyswp==3) then
+                  fcortex(i) = fcortex(j,l,i)
+               endif
 
-               rho(i)  = fbounds(i)%rho
+               rho(i)  = fcortex(i)%rho
                rhoe(i)  = rho(i)*xe
                rhopr(i) = rho(i) - rhoe(i)
-               tem_s = fbounds(i)%tem
+               tem_s = fcortex(i)%tem
 
                ze = me / tem_s
                zp = mp / tem_s
@@ -590,19 +601,21 @@
          elseif  (basenm(3:3) == 'C') then
 
             do i = nznp+1, nznp+5
-
-               ! Found position of the cells taken from the cosmological simulations
-               ! taking into account the displacement in reading: check initbu.F
-               ! would be better to just read the files once in initbu.F 
-               ! and store values in extra arrays for not saving the whole cubes
-               ! COPY the same in bndmax = 2
+   
+               if (xyswp==1) then
+                  ncortex(i) = ncortex(i,j,l)
+               elseif (xyswp==2) then
+                  ncortex(i) = ncortex(l,i,j)
+               elseif (xyswp==3) then
+                  ncortex(i) = ncortex(j,l,i)
+               endif
 
                xe = 1.0/1836.11
 
-               rho(i)  = nbounds(i-nznp)%rho
+               rho(i)  = ncortex(i-nznp)%rho
                rhoe(i)  = rho(i)*xe
                rhopr(i) = rho(i) - rhoe(i)
-               tem_s = nbounds(i-nznp)%tem
+               tem_s = ncortex(i-nznp)%tem
 
                ze = me / tem_s
                zp = mp / tem_s

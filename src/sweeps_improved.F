@@ -19,7 +19,8 @@
                KB2, c, pc, m_0, kb, mloss0, tem0, tem1, rm, fg,      &
                nmod, ipr, A0, gridly, fra, frs, pha, pa, rhoa,       &
                xznl, xzn, xznr, yznl, yzn, yznr, zznl, zzn, zznr,    &
-               boundPosX, boundPosY, boundPosZ, grav, physic, curth )
+               boundPosX, boundPosY, boundPosZ, grav, physic, curth, &
+               fxcortex, nxcortex, fycortex, nycortex, fzcortex, nzcortex )
 
       USE tipos
       USE workarrays
@@ -54,6 +55,8 @@
       type(TboundPosX) :: boundPosX(-4:5)
       type(TboundPosY) :: boundPosY(-4:5)
       type(TboundPosZ) :: boundPosZ(-4:5)
+
+      type(Tbounds) :: fxcortex(:,:,:), nxcortex(:,:,:), fycortex(:,:,:), nycortex(:,:,:), fzcortex(:,:,:), nzcortex(:,:,:)
 
 !------------------------------------------------------Output Variables
 
@@ -212,7 +215,9 @@
                psh1, psh2, kb, m_0, cl, me, mp, delx, uwi, vwi,        &
                shift, fg, rm, tem0, tem1, rorb, nmod, A0, gridly,      &
                fra, frs, pha, pa, rhoa, xzn, yzn, zzn, p, rho, rhoe,   &
-               rhopr, vel, velt, veltt, f, x, xl, xr, dx )
+               rhopr, vel, velt, veltt, f, x, xl, xr, dx,              &
+               ic_radius, ic_density, ic_pressure, fbounds, nbounds,   &
+               nstep, nbegin, fcortex, ncortex)
             endif
 
             ! X-sweep: left
@@ -430,7 +435,9 @@
                   psh1, psh2, kb, m_0, cl, me, mp, delx, uwi, vwi,        &
                   shift, fg, rm, tem0, tem1, rorb, nmod, A0, gridly,      &
                   fra, frs, pha, pa, rhoa, xzn, yzn, zzn, p, rho, rhoe,   &
-                  rhopr, vel, velt, veltt, f, x, xl, xr, dx  )
+                  rhopr, vel, velt, veltt, f, x, xl, xr, dx,              &
+                  ic_radius, ic_density, ic_pressure, fbounds, nbounds,   &
+                  nstep, nbegin, fcortex, ncortex)
                endif
             
             ! Y-sweep: left
@@ -635,7 +642,9 @@
                   psh1, psh2, kb, m_0, cl, me, mp, delx, uwi, vwi,        &
                   shift, fg, rm, tem0, tem1, rorb, nmod, A0, gridly,      &
                   fra, frs, pha, pa, rhoa, xzn, yzn, zzn, p, rho, rhoe,   &
-                  rhopr, vel, velt, veltt, f, x, xl, xr, dx  )
+                  rhopr, vel, velt, veltt, f, x, xl, xr, dx,              &
+                  ic_radius, ic_density, ic_pressure, fbounds, nbounds,   &
+                  nstep, nbegin, fcortex, ncortex)
                endif
 
                ! Z-sweep: left

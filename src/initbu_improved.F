@@ -32,7 +32,7 @@
       dpady, A0, uwi, vwi, vwp, rhowp, uwp, vk, shift,        &
       rorb, rho_0a, R_b, pc, c, kb, m_0, me, mp, q0,          &
       mloss0, ncl, nz2, ic, jc, kc, physic,                   &
-      fxcortex, nxcortex, fycortex, nycortex, fzcortex )
+      fxcortex, nxcortex, fycortex, nycortex, fzcortex, nzcortex )
 
       USE constantes
       USE parallel
@@ -134,7 +134,7 @@
 
     real(4), pointer :: scr(:,:,:)
 
-    type(Tbounds) :: fxcortex(:,:,:), nxcortex(:,:,:), fycortex(:,:,:), nycortex(:,:,:), fzcortex(:,:,:)
+    type(Tbounds) :: fxcortex(:,:,:), nxcortex(:,:,:), fycortex(:,:,:), nycortex(:,:,:), fzcortex(:,:,:), nzcortex(:,:,:)
 
 !     --------- CODI FELIX
       integer                     :: total_grups, restes
@@ -477,42 +477,53 @@
 
          do kk=1,nz
             do jj=1,ny
+
                do ii=1,nx
                   physic(ii,jj,kk)%densty = scr(ii+ini,jj+jni,kk+kni)*2.*0.72**2 /(3.18)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
                enddo
 
                ! Save ghost cells for boundary routine later on
-               do ii=-4,0
-                  fxcortex(ii,jj,kk)%dens = scr(ii+ini,jj+jni,kk+kni)*2.*0.72**2 /(3.18)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
-               enddo
-
-               do ii=0,5
-                  nxcortex(ii,jj,kk)%dens = scr(ii+ini,jj+jni,kk+kni)*2.*0.72**2 /(3.18)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
-               enddo
+               if (mpi_coords(1) == 0) then
+                  do ii=-4,0
+                     fxcortex(ii,jj,kk)%dens = scr(ii+ini,jj+jni,kk+kni)*2.*0.72**2 /(3.18)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
+                  enddo
+               endif
+               if (mpi_coords(1) == (mpi_dims(1)-1)) then
+                  do ii=0,5
+                     nxcortex(ii,jj,kk)%dens = scr(ii+ini,jj+jni,kk+kni)*2.*0.72**2 /(3.18)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
+                  enddo
+               endif
             enddo
          enddo
 
          do kk=1,nz
             do ii=1,nx
-               do jj=-4,0
-                  fycortex(ii,jj,kk)%dens = scr(ii+ini,jj+jni,kk+kni)*2.*0.72**2 /(3.18)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
-               enddo
+               if (mpi_coords(2) == 0) then
+                  do jj=-4,0
+                     fycortex(ii,jj,kk)%dens = scr(ii+ini,jj+jni,kk+kni)*2.*0.72**2 /(3.18)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
+                  enddo
+               endif
 
-               do jj=0,5
-                  nycortex(ii,jj,kk)%dens = scr(ii+ini,jj+jni,kk+kni)*2.*0.72**2 /(3.18)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
-               enddo
+               if (mpi_coords(2) == (mpi_dims(2)-1)) then
+                  do jj=0,5
+                     nycortex(ii,jj,kk)%dens = scr(ii+ini,jj+jni,kk+kni)*2.*0.72**2 /(3.18)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
+                  enddo
+               endif
             enddo
          enddo
 
          do ii=1,nx
             do jj=1,ny
-               do kk=-4,0
-                  fzcortex(ii,jj,kk)%dens = scr(ii+ini,jj+jni,kk+kni)*2.*0.72**2 /(3.18)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
-               enddo
-
-               do kk=0,5
-                  nzcortex(ii,jj,kk)%dens = scr(ii+ini,jj+jni,kk+kni)*2.*0.72**2 /(3.18)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
-               enddo
+               if (mpi_coords(3) == 0) then
+                  do kk=-4,0
+                     fzcortex(ii,jj,kk)%dens = scr(ii+ini,jj+jni,kk+kni)*2.*0.72**2 /(3.18)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
+                  enddo
+               endif
+               if (mpi_coords(3) == (mpi_dims(3)-1)) then
+                  do kk=0,5
+                     nzcortex(ii,jj,kk)%dens = scr(ii+ini,jj+jni,kk+kni)*2.*0.72**2 /(3.18)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
+                  enddo
+               endif
             enddo
          enddo
 
@@ -582,37 +593,46 @@
                enddo
 
                ! Save ghost cells for boundary routine later on
-               do i=-4,0
-                  fxcortex(i,j,k)%temp = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
-               enddo
-
-               do i=0,5
-                  nxcortex(i,j,k)%temp = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
-               enddo
+               if (mpi_coords(1) == 0) then
+                  do i=-4,0
+                     fxcortex(i,j,k)%temp = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
+                  enddo
+               endif
+               if (mpi_coords(1) == (mpi_dims(1)-1)) then
+                  do i=0,5
+                     nxcortex(i,j,k)%temp = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
+                  enddo
+               endif
             enddo
          enddo
 
          do k=1,nz
             do i=1,nx
-               do j=-4,0
-                  fycortex(i,j,k)%temp = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
-               enddo
-
-               do j=0,5
-                  nycortex(i,j,k)%temp = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
-               enddo
+               if (mpi_coords(2) == 0) then
+                  do j=-4,0
+                     fycortex(i,j,k)%temp = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
+                  enddo
+               endif
+               if (mpi_coords(2) == (mpi_dims(2)-1)) then
+                  do j=0,5
+                     nycortex(i,j,k)%temp = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
+                  enddo
+               endif
             enddo
          enddo
 
          do i=1,nx
             do j=1,ny
-               do k=-4,0
-                  fzcortex(i,j,k)%temp = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
-               enddo
-
-               do k=0,5
-                  nzcortex(i,j,k)%temp = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
-               enddo
+               if (mpi_coords(3) == 0) then
+                  do k=-4,0
+                     fzcortex(i,j,k)%temp = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
+                  enddo
+               endif
+               if (mpi_coords(3) == (mpi_dims(3)-1)) then
+                  do k=0,5
+                     nzcortex(i,j,k)%temp = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
+                  enddo
+               endif
             enddo
          enddo
 

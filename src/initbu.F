@@ -561,7 +561,8 @@
         print *, '  Tb [K]        = ', temb*m_0*c**2/kb
         print *, '  Tm [K]        = ', tema*m_0*c**2/kb
         print *, '  rhob [g*cm-3] = ', rhob*rho_0a
-        print *, '  rhom [g*cm-3] = ', rho_0a
+        print *, '  rho_0a [g*cm-3] = ', rho_0a
+        print *, '  rhom [g*cm-3] = ', physic(nx/4,1,nz/4)%densty
         print *, '  eta           = ', rhob
         print *, '  Xeb           = ', rhoeb/rhob
         print *, '  epsb [c2]     = ', epsb
