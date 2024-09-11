@@ -71,7 +71,7 @@ MODULE tipos
   end type TplanePhysic
 
   type Tbounds
-    real(rs):: densty
+    real(rs):: rho
     real(rs):: pres
     real(rs):: tem
   end type

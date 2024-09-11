@@ -212,8 +212,6 @@ subroutine hydrow3( tid, fznp, nznp, igodu, small, smlrho, epsiln, &
 
   call coef( tid, fznp, nznp, dx, coeff1, coeff2, coeff3, coeff4, coeff5 )
 
-  ! print*,'Coef done for hydro sweep',xyswp,'j',j,'k',k
-
   !Definimos las Variables wvel y wvelt para reconstruccion.
   !17/12/01. Perucho
   do i= fznp-5, nznp+5

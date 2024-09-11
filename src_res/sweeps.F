@@ -19,8 +19,7 @@
                KB2, c, pc, m_0, kb, mloss0, tem0, tem1, rm, fg,      &
                nmod, ipr, A0, gridly, fra, frs, pha, pa, rhoa,       &
                xznl, xzn, xznr, yznl, yzn, yznr, zznl, zzn, zznr,    &
-               boundPosX, boundPosY, boundPosZ, grav, physic, curth, &
-               xcortex, ycortex, zcortex )
+               boundPosX, boundPosY, boundPosZ, grav, physic, curth )
 
       USE tipos
       USE workarrays
@@ -29,7 +28,7 @@
 
 !-------------------------------------------------------Input Variables
 
-      character(4), intent(in):: basenm
+      character, intent(in):: basenm*(*)
 
       integer(is):: rkin, igodu, igeomx, igeomy, igeomz, ms,         &
       bndmnx, bndmxx, bndmny, bndmxy, bndmnz, bndmxz,  &
@@ -55,10 +54,6 @@
       type(TboundPosX) :: boundPosX(-4:5)
       type(TboundPosY) :: boundPosY(-4:5)
       type(TboundPosZ) :: boundPosZ(-4:5)
-      type(Tbounds) :: xcortex(-4:5,ny,nz),ycortex(nx,-4:5,nz),zcortex(nx,ny,-4:5)
-      type(Tbounds) :: cortex(-4:5)
-
-      integer(is) :: nstep, nbegin
 
 !------------------------------------------------------Output Variables
 
@@ -110,8 +105,7 @@
 !$OMP PRIVATE(area,areal,arear,dvol,r,re,rp,m,mt,mtt,e,f,fict)&
 !$OMP PRIVATE(rflx,reflx,mflx,mtflx,mttflx,eflx,fflx)&
 !$OMP PRIVATE(xe_s,meff,tem,dedt)&
-!$OMP PRIVATE(temps, estat)&
-!$OMP PRIVATE(cortex)
+!$OMP PRIVATE(temps, estat)
 
 # ifdef OPENMP
       call my_omp_get_thread_num(curth)
@@ -210,22 +204,15 @@
                fict(i) = 0.0
             enddo
             
-
             if ( mpi_coords(1) == 0 .or.   &
             mpi_coords(1) == (mpi_dims(1)-1) ) then
-
-               cortex = xcortex(:,j,k)
-               ! print*,'SWEEPS X, cortex densty:',cortex%densty
-               ! print*,'SWEEPS X, cortex tem:',cortex%tem
-
-               call bndry(basenm, fznp, nznp, j, k, nsdim, bndmin, bndmax, xyswp, ipr,    &
+               call bndry( fznp, nznp, j, k, nsdim, bndmin, bndmax, xyswp, ipr,    &
                gamma_ad, timej, mny5, dt, t0, t1, vptbd, rptbd, pptbd, &
                ms, pb, rhob, rhoeb, velb, mm1, mm2, nn, dk1,  dk2,     &
                psh1, psh2, kb, m_0, cl, me, mp, delx, uwi, vwi,        &
                shift, fg, rm, tem0, tem1, rorb, nmod, A0, gridly,      &
                fra, frs, pha, pa, rhoa, xzn, yzn, zzn, p, rho, rhoe,   &
-               rhopr, vel, velt, veltt, f, x, xl, xr, dx,              &
-               nstep, nbegin, cortex)
+               rhopr, vel, velt, veltt, f, x, xl, xr, dx )
             endif
 
             ! X-sweep: left
@@ -437,19 +424,13 @@
 
                if (bndmny /= 4 .and. ( mpi_coords(2) == 0 .or.   &
                mpi_coords(2) == (mpi_dims(2)-1) )) then
-
-                  cortex = ycortex(i,:,k)
-                  ! print*,'SWEEPS Y, cortex:',cortex%densty
-                  ! print*,'SWEEPS Y, cortex tem:',cortex%tem
-                  
-                  call bndry(basenm, fznp, nznp, k, i, nsdim, bndmin, bndmax, xyswp, ipr,    &
+                  call bndry( fznp, nznp, k, i, nsdim, bndmin, bndmax, xyswp, ipr,    &
                   gamma_ad, timej, mny5, dt, t0, t1, vptbd, rptbd, pptbd, &
                   ms, pb, rhob, rhoeb, velb, mm1, mm2, nn, dk1,  dk2,     &
                   psh1, psh2, kb, m_0, cl, me, mp, delx, uwi, vwi,        &
                   shift, fg, rm, tem0, tem1, rorb, nmod, A0, gridly,      &
                   fra, frs, pha, pa, rhoa, xzn, yzn, zzn, p, rho, rhoe,   &
-                  rhopr, vel, velt, veltt, f, x, xl, xr, dx,              &
-                  nstep, nbegin, cortex)
+                  rhopr, vel, velt, veltt, f, x, xl, xr, dx  )
                endif
             
             ! Y-sweep: left
@@ -648,19 +629,13 @@
 
                if ( mpi_coords(3) == 0 .or.   &
                mpi_coords(3) == (mpi_dims(3)-1) ) then
-
-                  cortex = zcortex(i,j,:)
-                  ! print*,'SWEEPS Z, cortex:',cortex%densty
-                  ! print*,'SWEEPS Z, cortex tem:',cortex%tem
-                  
-                  call bndry(basenm, fznp, nznp, i, j, nsdim, bndmin, bndmax, xyswp, ipr,    &
+                  call bndry( fznp, nznp, i, j, nsdim, bndmin, bndmax, xyswp, ipr,    &
                   gamma_ad, timej, mny5, dt, t0, t1, vptbd, rptbd, pptbd, &
                   ms, pb, rhob, rhoeb, velb, mm1, mm2, nn, dk1,  dk2,     &
                   psh1, psh2, kb, m_0, cl, me, mp, delx, uwi, vwi,        &
                   shift, fg, rm, tem0, tem1, rorb, nmod, A0, gridly,      &
                   fra, frs, pha, pa, rhoa, xzn, yzn, zzn, p, rho, rhoe,   &
-                  rhopr, vel, velt, veltt, f, x, xl, xr, dx,              &
-                  nstep, nbegin, cortex)
+                  rhopr, vel, velt, veltt, f, x, xl, xr, dx  )
                endif
 
                ! Z-sweep: left
@@ -765,46 +740,38 @@
                   if ((basenm(1:1) == 'M' .and. basenm(2:2) == 'C').or. &
                   (basenm(1:1) == 'P'.and. basenm(2:2) == 'W').or.      &
                   (basenm(1:1) == 'J'.and. basenm(2:2) == '3')) then ! .and. basenm(4:4) /= '0')) then
-                     
-                     ! Substracting the cooling energy
-                     if (ABS(physic(i,j,k)%velx) > 1.e-5 .or. ABS(physic(i,j,k)%vely) > 1.e-5 .or. ABS(physic(i,j,k)%velz) > 1.e-5) then
-                        
-                        xe_s  =  physic(i,j,k)%denstye/physic(i,j,k)%densty
-                        meff= 1.0/9.1095e-28 * (xe_s + (1.0-xe_s)/1836.11)
-                        tem = physic(i,j,k)%pres/physic(i,j,k)%densty*9.e20/meff/kb
+ 
+                     xe_s  =  physic(i,j,k)%denstye/physic(i,j,k)%densty
+                     meff= 1.0/9.1095e-28 * (xe_s + (1.0-xe_s)/1836.11)
+                     tem = physic(i,j,k)%pres/physic(i,j,k)%densty*9.e20/meff/kb
 
-                        ! Energy loses due to cooling (Perucho+22, Raymon,Cox&Smith+76)
-                        if (tem .lt. 1e4) then
-                           dedt = 0.
-                        elseif (tem .ge. 1.e4 .and. tem .lt. 1.e5) then
-                           dedt = (physic(i,j,k)%densty*rho_0a*meff)**2 * 7.e-27*tem
-                        elseif (tem .ge. 1.e5 .and. tem .lt. 4.e7) then
-                           dedt = (physic(i,j,k)%densty*rho_0a*meff)**2 * 7.e-19*tem**(-0.6)
-                        elseif (tem .ge. 4.e7) then
-                           dedt = (physic(i,j,k)%densty*rho_0a*meff)**2 * 3.e-27*tem**(0.5)
-                        endif
-                        dedt = dedt/rho_0a/9.e20/3.e10*R_b
-
-                        ! Problem with negative energy
-                        if (physic(i,j,k)%energy - c*dedt*dt <= 0.d0) then
-                           print*,'--------------- SWEEPS: NEGATIVE ENERGY ---------------'
-                           print*,'Rkin: ',rkin
-                           print*,'nuproc,i,j,k: ',nuproc,i,j,k
-                           print*,'physic(i,j,k)%energy-c*dedt*dt: ',physic(i,j,k)%energy-c*dedt*dt
-                           print*,'physic(i,j,k)%energy,dedt,dt:', physic(i,j,k)%energy,dedt,dt 
-                           print*,'physic(i,j,k)%energy/dedt/dt',physic(i,j,k)%energy/dedt/dt
-                           print*,'Temperature', tem
-                           stop
-                        endif
-
-                        ! Cooling substraction
-                        physic(i,j,k)%energy = physic(i,j,k)%energy - c*dedt*dt
-
-                     else
-                        ! No cooling
-                        physic(i,j,k)%energy = physic(i,j,k)%energy
-
+                     ! Energy loses due to cooling (Perucho+22, Raymon,Cox&Smith+76)
+                     if (tem .lt. 1e4) then
+                        dedt = 0.
+                     elseif (tem .ge. 1.e4 .and. tem .lt. 1.e5) then
+                        dedt = (physic(i,j,k)%densty*rho_0a*meff)**2 * 7.e-27*tem
+                     elseif (tem .ge. 1.e5 .and. tem .lt. 4.e7) then
+                        dedt = (physic(i,j,k)%densty*rho_0a*meff)**2 * 7.e-19*tem**(-0.6)
+                     elseif (tem .ge. 4.e7) then
+                        dedt = (physic(i,j,k)%densty*rho_0a*meff)**2 * 3.e-27*tem**(0.5)
                      endif
+                     dedt = dedt/rho_0a/9.e20/3.e10*R_b
+
+                     ! Problem with negative energy
+                     if (physic(i,j,k)%energy - c*dedt*dt <= 0.d0) then
+                        print*,'--------------- SWEEPS: NEGATIVE ENERGY ---------------'
+                        print*,'Rkin: ',rkin
+                        print*,'nuproc,i,j,k: ',nuproc,i,j,k
+                        print*,'physic(i,j,k)%energy-c*dedt*dt: ',physic(i,j,k)%energy-c*dedt*dt
+                        print*,'physic(i,j,k)%energy,dedt,dt:', physic(i,j,k)%energy,dedt,dt 
+                        print*,'physic(i,j,k)%energy/dedt/dt',physic(i,j,k)%energy/dedt/dt
+                        print*,'Temperature', tem
+                        stop
+                     endif
+
+                     ! Cooling substraction
+                     physic(i,j,k)%energy = physic(i,j,k)%energy - c*dedt*dt
+
                   endif
 
                   if (basenm(3:3) == 'M') then                     

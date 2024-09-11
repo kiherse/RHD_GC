@@ -27,7 +27,8 @@
       shift, fg, rm, tem0, tem1, rorb, nmod, A0, gridly,      &
       fra, frs, pha, pa, rhoa, xzn, yzn, zzn, p, rho, rhoe,   &
       rhopr, vel, velt, veltt, f, x, xl, xr, dx,              &
-      nstep, nbegin, cortex)
+      ic_radius, ic_density, ic_pressure, fbounds, nbounds,   &
+      nstep, nbegin, fcortex, ncortex)
 
       USE parallel
       USE workarrays
@@ -52,8 +53,10 @@
 
 ! Sizes mnx1, mny1, mnz1
       real(rs)   :: xzn(*), yzn(*), zzn(*)
-
-      type(Tbounds) :: cortex(-4:5)
+      
+      real(8), dimension(10000) :: ic_radius, ic_density, ic_pressure
+      
+      type(Tbounds) :: fcortex(:,:,:), ncortex(:,:,:)
 
 !------------------------------------------------------Output Variables
 
@@ -80,6 +83,9 @@
       dpdrho_s, dpdeps_s,     &
       ze,zp,meff1,dpdrho
 
+      real(8):: radi, ic_density_interp, ic_spec_int_energy_interp, ic_pressure_interp
+
+      type(Tbounds) :: fbounds(-4:0), nbounds(1:5)
       integer(is) :: nstep, nbegin
       
 !---------------------------------------------------------------------------BEGIN
@@ -114,9 +120,51 @@
 
 ! FLOW-OUT BOUNDARY
       ELSE IF (bndmin == 2) THEN
+
+         ! J3I* basenm 
+         if (basenm(3:3) == 'I') then
+
+            do i = fznp-1, fznp-5, -1  
+               if (nstep==1 .or. nbegin==nstep+1) then  
+                  dx(i)   = dx(fznp)
+                  xl(i) = xl(i+1) - dx(i)
+                  xr(i) = xr(i+1) - dx(i+1)
+                  x(i)  = 0.5*(xl(i) + xr(i))
+   
+                  if (xyswp==1) then
+                     radi  = sqrt(x(i)**2+(yzn(j)+shift)**2+zzn(l)**2)
+                  elseif (xyswp==2) then
+                     radi  = sqrt(xzn(l)**2+(x(i)+shift)**2+zzn(j)**2)
+                  elseif (xyswp==3) then
+                     radi  = sqrt(xzn(j)**2+(yzn(l)+shift)**2+x(i)**2)
+                  endif
+   
+                  ! Initial conditions profile
+                  fbounds(i)%rho = interpolate(radi, ic_radius, ic_density)
+                  fbounds(i)%pres = interpolate(radi, ic_radius, ic_pressure)
+               endif
+
+               xe = 1.0/1836.11
+
+               rho(i)  = fbounds(i)%rho
+               rhoe(i)  = rho(i)*xe
+               rhopr(i) = rho(i) - rhoe(i)
+               tem_s = fbounds(i)%pres/fbounds(i)%rho*(xe/me+(1-xe)/mp)**(-1)
+               
+               ze = me / tem_s
+               zp = mp / tem_s
+               meff1 = (1.0-1./1836.110)/mp + 1./1836.110/me
+               dpdrho = tem_s*meff1
+
+               p(i) = rho(i)*dpdrho
+               f(i)    = 0.0 ! ambient medium tracer
+               vel(i)  = 0.0 ! ambient medium velocities
+               velt(i) = 0.0
+               veltt(i)= 0.0
+            enddo
          
          ! J3C* basenm 
-         if  (basenm(3:3) == 'C') then
+         elseif  (basenm(3:3) == 'C') then
 
             do i= fznp-5, fznp-1
 
@@ -127,12 +175,19 @@
                ! COPY the same in bndmax = 2
 
                xe = 1.0/1836.11
+   
+               if (xyswp==1) then
+                  fcortex(i) = fcortex(i,j,l)
+               elseif (xyswp==2) then
+                  fcortex(i) = fcortex(l,i,j)
+               elseif (xyswp==3) then
+                  fcortex(i) = fcortex(j,l,i)
+               endif
 
-               rho(i) = cortex(i)%densty
-               tem_s = cortex(i)%tem
-
+               rho(i)  = fcortex(i)%rho
                rhoe(i)  = rho(i)*xe
                rhopr(i) = rho(i) - rhoe(i)
+               tem_s = fcortex(i)%tem
 
                ze = me / tem_s
                zp = mp / tem_s
@@ -144,10 +199,6 @@
                vel(i)  = 0.0 ! ambient medium velocities
                velt(i) = 0.0
                veltt(i)= 0.0
-               dx(i) = dx(fznp)
-
-               ! print*, 'i:', i, 'rho(i):', rho(i), 'tem', tem_s, 'dx(i)', dx(i)
-               ! stop
             enddo
 
          ! Other basenm 
@@ -501,16 +552,70 @@
 ! FLOW-OUT BOUNDARY
       ELSE IF (bndmax == 2) THEN
 
-         if  (basenm(3:3) == 'C') then
+         ! J3I* basenm 
+         if (basenm(3:3) == 'I') then
+
+            do i= nznp+1, nznp+5
+
+               if (nstep==1 .or. nbegin==nstep+1) then      
+
+                  dx(i)   = dx(nznp)
+                  xl(i) = xl(i-1) + dx(i-1)
+                  xr(i) = xr(i-1) + dx(i)
+                  x(i)  = 0.5*(xl(i) + xr(i))
+   
+                  if (xyswp==1) then
+                     radi  = sqrt(x(i)**2+(yzn(j)+shift)**2+zzn(l)**2)
+                  elseif (xyswp==2) then
+                     radi  = sqrt(xzn(l)**2+(x(i)+shift)**2+zzn(j)**2)
+                  elseif (xyswp==3) then
+                     radi  = sqrt(xzn(j)**2+(yzn(l)+shift)**2+x(i)**2)
+                  endif
+   
+                  ! Initial conditions profile
+                  nbounds(i-nznp)%rho = interpolate(radi, ic_radius, ic_density)
+                  nbounds(i-nznp)%pres = interpolate(radi, ic_radius, ic_pressure)
+
+               endif
+
+               xe = 1.0/1836.11
+
+               rho(i)  = nbounds(i-nznp)%rho
+               rhoe(i)  = rho(i)*xe
+               rhopr(i) = rho(i) - rhoe(i)
+               tem_s = nbounds(i-nznp)%pres/nbounds(i-nznp)%rho*(xe/me+(1-xe)/mp)**(-1)
+               
+               ze = me / tem_s
+               zp = mp / tem_s
+               meff1 = (1.0-1./1836.110)/mp + 1./1836.110/me
+               dpdrho = tem_s*meff1
+               p(i) = rho(i)*dpdrho
+               f(i)    = 0.0 ! ambient medium tracer
+               vel(i)  = 0.0 ! ambient medium velocities
+               velt(i) = 0.0
+               veltt(i)= 0.0
+            enddo
+
+         
+         ! J3C* basenm 
+         elseif  (basenm(3:3) == 'C') then
 
             do i = nznp+1, nznp+5
    
-               rho(i) = cortex(i-nznp)%densty
-               tem_s = cortex(i-nznp)%tem
+               if (xyswp==1) then
+                  ncortex(i) = ncortex(i,j,l)
+               elseif (xyswp==2) then
+                  ncortex(i) = ncortex(l,i,j)
+               elseif (xyswp==3) then
+                  ncortex(i) = ncortex(j,l,i)
+               endif
+
                xe = 1.0/1836.11
 
+               rho(i)  = ncortex(i-nznp)%rho
                rhoe(i)  = rho(i)*xe
                rhopr(i) = rho(i) - rhoe(i)
+               tem_s = ncortex(i-nznp)%tem
 
                ze = me / tem_s
                zp = mp / tem_s
@@ -523,10 +628,6 @@
                velt(i) = 0.0
                veltt(i)= 0.0
                dx(i)   = dx(nznp)
-
-               ! print*, 'i-nznp:', i-nznp, 'rho(i):', rho(i), 'tem', tem_s, 'dx(i)', dx(i)
-               ! stop
-
             enddo
 
          ! Other basenm

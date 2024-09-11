@@ -17,28 +17,20 @@
 !     (Wilson & Falle,  1985,  MNRAS,  216,  971) for jets
 !     MODIFIED 20-DEC-1996 to change the perturbation data input (now
 !     through common /PERT/)
-
 !===============================================================================
-
-      subroutine bndry(basenm, fznp, nznp, j, l, nsdim, bndmin, bndmax, xyswp, ipr,    &
+      subroutine bndry( fznp, nznp, j, l, nsdim, bndmin, bndmax, xyswp, ipr,    &
       gamma_ad, timej, mny5, dt, t0, t1, vptbd, rptbd, pptbd, &
       ms, pb, rhob, rhoeb, velb, mm1, mm2, nn, dk1,  dk2,     &
       psh1, psh2, kb, m_0, cl, me, mp, delx, uwi, vwi,        &
       shift, fg, rm, tem0, tem1, rorb, nmod, A0, gridly,      &
       fra, frs, pha, pa, rhoa, xzn, yzn, zzn, p, rho, rhoe,   &
-      rhopr, vel, velt, veltt, f, x, xl, xr, dx,              &
-      nstep, nbegin, cortex)
+      rhopr, vel, velt, veltt, f, x, xl, xr, dx )
 
       USE parallel
       USE workarrays
-
       implicit none
 # include "types.h"
-
 !-------------------------------------------------------Input Variables
-
-      character(4), intent(in):: basenm
-
       integer(is):: fznp, nznp, j, l, mny5
 
       integer(is):: nsdim, bndmin, bndmax, xyswp, ms, nmod, ipr
@@ -50,50 +42,42 @@
 
       real(rs)   :: pa(-4:mny5), rhoa(-4:mny5)
 
-! Sizes mnx1, mny1, mnz1
-      real(rs)   :: xzn(*), yzn(*), zzn(*)
-
-      type(Tbounds) :: cortex(-4:5)
+! sizes mnx1, mny1, mnz1
+      real(rs)   :: xzn(*), yzn(*), zzn(*) 
 
 !------------------------------------------------------Output Variables
-
 ! size -4:mn5
       real(rs)   :: p(-4:*), rho(-4:*), rhoe(-4:*), vel(-4:*), velt(-4:*), &
       veltt(-4:*),  rhopr(-4:*), f(-4:*)
 
 ! size -4:mn5
-      real(rs)   :: x(-4:*), xl(-4:*), xr(-4:*), dx(-4:*)  
+      real(rs)   :: x(-4:*), xl(-4:*), xr(-4:*), dx(-4:*)
 
 !-------------------------------------------------------Local Variables
-      
-      integer(is):: i, ln, counter
+      integer(is):: i, ln
 
       real(rs)   :: vboun, rboun, reboun, pboun, vi, epstmp, radius, gamm1, irho, & 
       tt1, tt2
 
       real(rs)   :: scr4, scr5, scr6, scr8, scr9, xt, xtt, theta1, theta2, &
-      p0, pi, z1, z2, xe
+      p0, pi, z1, z2, alpha, theta
 
-      real(rs)   :: rho_sy, xe_s,tem_s,   &
-      eps_sy,p_sy,gam_s,   &
-      h_s, cs_s,              &
-      dpdrho_s, dpdeps_s,     &
-      ze,zp,meff1,dpdrho
+      real(rs)   :: radi, rhoa3
 
-      integer(is) :: nstep, nbegin
-      
+      real(rs)   :: rho_sy(1),xe_s(1),tem_s(1),   &
+      eps_sy(1),p_sy(1),gam_s(1),   &
+      h_s(1), cs_s(1),              &
+      dpdrho_s(1), dpdeps_s(1),     &
+      ze(1),zp(1),meff1(1),dpdrho(1)
+
 !---------------------------------------------------------------------------BEGIN
-      
- ! Different sweeps 
-      
-!--------------------------------------------------------------- LEFT BOUNDARY
-
       IF ((xyswp == 1 .and. mpi_coords(1) == 0) .or. &
       (xyswp == 2 .and. mpi_coords(2) == 0) .or. &
       (xyswp == 3 .and. mpi_coords(3) == 0)) THEN 
 
-! REFLECTING BOUNDARY
+! LEFT BOUNDARY
       IF (bndmin == 1) THEN
+!Reflecting boundary
          do i= -4, 0
             rho(fznp-1+i)  = rho(fznp-i)
             rhoe(fznp-1+i)  = rhoe(fznp-i)
@@ -112,58 +96,19 @@
             x(i)  = 0.5*(xl(i) + xr(i))
          enddo
 
-! FLOW-OUT BOUNDARY
       ELSE IF (bndmin == 2) THEN
-         
-         ! J3C* basenm 
-         if  (basenm(3:3) == 'C') then
-
-            do i= fznp-5, fznp-1
-
-               ! Found position of the cells taken from the cosmological simulations
-               ! taking into account the displacement in reading: check initbu.F
-               ! would be better to just read the files once in initbu.F 
-               ! and store values in extra arrays for not saving the whole cubes
-               ! COPY the same in bndmax = 2
-
-               xe = 1.0/1836.11
-
-               rho(i) = cortex(i)%densty
-               tem_s = cortex(i)%tem
-
-               rhoe(i)  = rho(i)*xe
-               rhopr(i) = rho(i) - rhoe(i)
-
-               ze = me / tem_s
-               zp = mp / tem_s
-               meff1 = (1.0-1./1836.110)/mp + 1./1836.110/me
-               dpdrho = tem_s*meff1
-
-               p(i) = rho(i)*dpdrho
-               f(i)    = 0.0 ! ambient medium tracer
-               vel(i)  = 0.0 ! ambient medium velocities
-               velt(i) = 0.0
-               veltt(i)= 0.0
-               dx(i) = dx(fznp)
-
-               ! print*, 'i:', i, 'rho(i):', rho(i), 'tem', tem_s, 'dx(i)', dx(i)
-               ! stop
-            enddo
-
-         ! Other basenm 
-         else
-            do i= fznp-5, fznp-1
-               rho(i)  = rho(fznp)
-               rhoe(i)  = rhoe(fznp)
-               rhopr(i) = rho(i) - rhoe(i)
-               vel(i)  = vel(fznp)
-               velt(i) = velt(fznp)
-               veltt(i)= veltt(fznp)
-               p(i)    = p(fznp)
-               f(i)    = f(fznp)
-               dx(i)   = dx(fznp)
-            enddo
-         endif
+!Flow-out boundary
+         do i= fznp-5, fznp-1
+            rho(i)  = rho(fznp)
+            rhoe(i)  = rhoe(fznp)
+            rhopr(i) = rho(i) - rhoe(i)
+            vel(i)  = vel(fznp)
+            velt(i) = velt(fznp)
+            veltt(i)= veltt(fznp)
+            p(i)    = p(fznp)
+            f(i)    = f(fznp)
+            dx(i)   = dx(fznp)
+         enddo
 
          do i=fznp-1, fznp-5, -1
             xl(i) = xl(i+1) - dx(i)
@@ -171,8 +116,8 @@
             x(i)  = 0.5*(xl(i) + xr(i))
          enddo
 
-! PERIODIC BOUNDARY
       ELSE IF (bndmin == 4) THEN
+!Periodic boundary
          do i= -4, 0
             rho  (fznp-1+i) = rho  (nznp+i)
             rhoe  (fznp-1+i) = rhoe  (nznp+i)
@@ -185,8 +130,9 @@
             dx   (fznp-1+i) = dx   (nznp+i)
          enddo
 
-!INFLOW JET BOUNDARY + Fixed boundary
+
       ELSE IF (bndmin == 5) THEN
+!Inflow jet boundary + Fixed boundary
          do i= -4, 0
 
             if ((xzn(l)*xzn(l)+zzn(j)*zzn(j)) <= 1.0) then
@@ -201,16 +147,25 @@
                   reboun= rptbd/rhob * rhoeb
                   pboun = pptbd
                endif
+
                rho(i)  = rboun
                irho    = 1.0 /rho(i) 
                rhoe(i) = reboun
                rhopr(i)= rho(i) - rhoe(i)
-               vel(i)  = vboun
 
-!              Helicoidal PERTURBATIONS of the velocity 
-!              (to break simmetry and reproduce observations)
-               velt(i) = vel(i)*0.00025*(cos(0.0001*timej)+cos(0.05*timej)+cos(0.1*timej)+cos(0.5*timej))
-               veltt(i)= vel(i)*0.00025*(sin(0.0001*timej)+sin(0.05*timej)+sin(0.1*timej)+sin(0.5*timej))
+               pi = acos(-1.) 
+               alpha = 0.29! Opening angle
+               ! projection angle for the radial velocity
+               if (xzn(l) > 1.e-6) then
+                  theta = atan(zzn(j)/xzn(l))
+               else if (abs(xzn(l)) < 1.e-6) then
+                  theta = 0.5*pi
+               else
+                  theta = atan(zzn(j)/xzn(l))-pi
+               endif
+               vel(i)  = vboun
+               velt(i) = vel(i)*tan(alpha)*sin(theta) ! z-projection
+               veltt(i)= vel(i)*tan(alpha)*cos(theta) ! x-projection
                p(i)    = pboun
                f(i)    = 1.0
                dx(i)   = dx(fznp)
@@ -220,21 +175,21 @@
                   rhoe(i)  = rhoe(fznp)
                   rhopr(i)= rho(i) - rhoe(i)
                   vel(i)  = -vel(fznp)
-                  velt(i) = velt(fznp)
-                  veltt(i)= veltt(fznp)
+                  velt(i) = 0.0
+                  veltt(i)= 0.0
                   p(i)    = p(fznp)
                   f(i)    = f(fznp)
                   dx(i)   = dx(fznp)
-!               endif
             endif
          enddo
 
-!INFLOW PERTURBED JET BOUNDARY + Fixed boundary
       ELSE IF (bndmin == 6) THEN
+!     Inflow perturbed jet boundary + Fixed boundary
+
          pi = acos(-1.)  
          tt2 = sqrt(xzn(l)*xzn(l) + zzn(j)*zzn(j))
          tt1 = tt2**ms
-         tt1 = 1.0 / cosh(tt1)    
+         tt1 = 1.0 / cosh( tt1 )    
 
          do i=fznp-5,fznp-1
             if (abs(tt1) <= 100.0) then
@@ -277,21 +232,21 @@
                veltt(i)= veltt(fznp)
                p(i)    = p(fznp)
                f(i)    = f(fznp)
-
-!              Outflow
                if (vel(fznp) <= 0.0) then
+! outflow
                   vel(i) = vel(fznp)
-
-!              Reflecting
                else
+! reflecting
                   vel(i) = -vel(fznp)
                endif
             endif
          enddo
          
-! Cartesian relativistic SHOCK REFLEXION (2D,3D):
-! Analytic conditions
+
       ELSE IF (bndmin == 7) THEN
+!     Cartesian relativistic shock reflexion (2D,3D):
+!     Analytic conditions
+
          if (xyswp == 1) then
             xt  = yzn(j)
             xtt = zzn(l)
@@ -326,7 +281,7 @@
             radius   = 1.0 / SQRT( x(i)*x(i) + xt*xt + xtt*xtt )
             tt1   = vi*radius
 
-!        2D and 3D corrected densities
+!that's the correct density for 2D or 3D
             rho(i)   = (1.0 + tt1*(timej-dt))**(nsdim-1)
             rhoe(i) = rhoeb
             rhopr(i) = rho(i) - rhoe(i)
@@ -339,9 +294,10 @@
             dx(i)    = delx
          enddo
 
-! INFLOW PERTURBED JET BOUNDARY + Fixed boundary
       ELSE IF (bndmin == 8) THEN
+!     Inflow perturbed jet boundary + Fixed boundary
          do i= -4, 0
+
             tt1 = sqrt(xzn(l)*xzn(l) + zzn(j)*zzn(j))
 
             if (tt1 <= 1.0) then
@@ -373,9 +329,9 @@
 
          enddo  
 
-! INFLOW PERTURBED JET BOUNDARY + Fixed boundary
       ELSE IF (bndmin == 9) THEN
-                                                                     
+
+!Inflow jet boundary + Fixed boundary                                                                       
          do i= -4, 0
 
             if ((xzn(l)*xzn(l)+zzn(j)*zzn(j)) <= 1.0) then
@@ -390,30 +346,43 @@
                   reboun= rptbd/rhob * rhoeb
                   pboun = pptbd
                endif
-                                                             
+
+!               gamm1 = 1.0 / (gamma_ad - 1.0)                                                              
                rho(i)  = rboun
                irho    = 1.0 /rho(i)
                rhoe(i) = reboun
                rhopr(i)= rho(i) - rhoe(i)
-               vel(i)  = vboun                                                            
+               vel(i)  = vboun!/(1.+timej-5784.5)**2                                                        
+!               velt(i) = 0.0                                                                               
+!               veltt(i)= 0.0                                                                               
+!               vel(i)  = 0.5/(timej-12000.)**2                                                             
 
                if (xzn(l) > 0. .and. zzn(j) > 0.) then
-                  velt(i) = 0.1/sqrt(2.)*velb*sin(atan(zzn(j)/xzn(l)))   
-                  veltt(i)= 0.1/sqrt(2.)*velb*cos(atan(zzn(j)/xzn(l)))     
+                  velt(i) = 0.1/sqrt(2.)*velb*sin(atan(zzn(j)/xzn(l))) !+ &
+!                        vel(i)*0.000025*(cos(0.0001*timej)+cos(0.05*timej)+cos(0.1*timej)+cos(0.5*timej))   
+                  veltt(i)= 0.1/sqrt(2.)*velb*cos(atan(zzn(j)/xzn(l))) !+ &
+!                        vel(i)*0.000025*(sin(0.0001*timej)+sin(0.05*timej)+sin(0.1*timej)+sin(0.5*timej))     
                else if (xzn(l) < 0. .and. zzn(j) > 0.) then
-                  velt(i) = 0.1/sqrt(2.)*velb*sin(atan(abs(zzn(j)/xzn(l))))                                                  
-                  veltt(i)= -0.1/sqrt(2.)*velb*cos(atan(abs(zzn(j)/xzn(l))))      
+                  velt(i) = 0.1/sqrt(2.)*velb*sin(atan(abs(zzn(j)/xzn(l)))) !+ &                                                                             
+!                        vel(i)*0.000025*(cos(0.0001*timej)+cos(0.05*timej)+cos(0.1*timej)+cos(0.5*timej))                                                   
+                  veltt(i)= -0.1/sqrt(2.)*velb*cos(atan(abs(zzn(j)/xzn(l)))) !+ &                                                                             
+!                        vel(i)*0.000025*(sin(0.0001*timej)+sin(0.05*timej)+sin(0.1*timej)+sin(0.5*timej))      
                else if (xzn(l) < 0. .and. zzn(j) < 0.) then
-                  velt(i) = -0.1/sqrt(2.)*velb*sin(atan(abs(zzn(j)/xzn(l))))                                                   
-                  veltt(i)= -0.1/sqrt(2.)*velb*cos(atan(abs(zzn(j)/xzn(l))))    
+                  velt(i) = -0.1/sqrt(2.)*velb*sin(atan(abs(zzn(j)/xzn(l)))) !+ &                                                 
+!                        vel(i)*0.000025*(cos(0.0001*timej)+cos(0.05*timej)+cos(0.1*timej)+cos(0.5*timej))                                                   
+                  veltt(i)= -0.1/sqrt(2.)*velb*cos(atan(abs(zzn(j)/xzn(l)))) !+ &                                                                           
+!                        vel(i)*0.000025*(sin(0.0001*timej)+sin(0.05*timej)+sin(0.1*timej)+sin(0.5*timej))    
                else if (xzn(l) > 0. .and. zzn(j) < 0.) then
-                  velt(i) = -0.1/sqrt(2.)*velb*sin(atan(abs(zzn(j)/xzn(l))))                                                  
-                  veltt(i)= 0.1/sqrt(2.)*velb*cos(atan(abs(zzn(j)/xzn(l))))                                                   
+                  velt(i) = -0.1/sqrt(2.)*velb*sin(atan(abs(zzn(j)/xzn(l)))) !+ &   
+!                        vel(i)*0.000025*(cos(0.0001*timej)+cos(0.05*timej)+cos(0.1*timej)+cos(0.5*timej))                                                   
+                  veltt(i)= 0.1/sqrt(2.)*velb*cos(atan(abs(zzn(j)/xzn(l)))) !+ &                            
+!                        vel(i)*0.000025*(sin(0.0001*timej)+sin(0.05*timej)+sin(0.1*timej)+sin(0.5*timej))                                                    
                endif
 
                p(i)    = p(fznp)
                f(i)    = f(fznp)
-               dx(i)   = dx(fznp)                                                                                    
+               dx(i)   = dx(fznp)
+!               endif                                                                                       
  
             else
 
@@ -430,8 +399,60 @@
             endif
          enddo
 
-!FLOW-OUT BOUNDARY WITH APPROX 
+!! Wind inflow boundary conditions
+
+!         do i=nznp+1, nznp+5
+!            xl(i) = xl(i-1) + dx(nznp)
+!            xr(i) = xr(i-1) + dx(nznp)
+!            x(i)  = 0.5*(xl(i) + xr(i))
+     
+ !            radi  = sqrt(xzn(i)**2+(yzn(j)+shift)**2+zzn(k)**2)
+ !            rhoa3 = 1./(1.+(radi/psh1)**nn)**(mm1/nn)      & 
+ !                       + fg*1./(1.+(radi/psh2)**nn)**(mm2/nn)
+
+ !            rho_sy(1)=rhoa3
+                   
+ !            xe_s(1)  = 1.0/1836.110
+
+ !            if (radi < rm) then 
+ !              tem_s(1)=(tem0+(tem1-tem0)*radi/rm)*kb/m_0/c**2
+ !              if (tem_s(1) > tem1*kb/m_0/c**2) tem_s(1)=tem1*kb/m_0/c**2
+ !            else
+ !                tem_s(1)=tem1*kb/m_0/c**2
+ !            endif
+
+          
+ !            call eos_synge( 1, tid, 1, 1, me, mp, rho_sy, xe_s, tem_s, eps_sy,   &
+ !                          p_sy, gam_s, h_s, cs_s, dpdrho_s, dpdeps_s)          
+
+  !          vel(i)  =  vwi
+  !          velt(i) =  0.0
+  !          veltt(i)=  0.0
+
+  !           idum=-3
+
+  !           rhoco = ran1(idum)*0.2-0.1
+
+
+  !           physic(i,j,k)%tracer = 0.0
+
+  !          physic(i,j,k)%densty  = rho_sy(1)+rho_sy(1)*rhoco
+  !          physic(i,j,k)%denstye = xe_s(1)*physic(i,j,k)%densty
+  !          physic(i,j,k)%pres    = p_sy(1)
+  !          physic(i,j,k)%opres   = physic(i,j,k)%pres 
+            
+  !          epsco = p_sy(1)/(gam_s(1)-1.0)/physic(i,j,k)%densty - eps_sy(1)
+
+  !          physic(i,j,k)%eps     = eps_sy(1)+epsco
+     
+   !         f(i)    =  0.0
+   !         dx(i)   = dx(nznp)
+   ! enddo
+
+
+
       ELSE IF (bndmin == 10) THEN
+!Flow-out boundary with approx... 
          do i= fznp-1, fznp-5, -1
             rho(i)  = (rho(fznp+1)-rho(fznp))/(x(fznp+1)-x(fznp))*(x(i)-x(fznp))+rho(fznp)
 !            rhoe(i)  = (rhoe(fznp+1)-rhoe(fznp))/(x(fznp+1)-x(fznp))*(x(i)-x(fznp))+rhoe(fznp) 
@@ -456,6 +477,7 @@
             x(i)  = 0.5*(xl(i) + xr(i))
          enddo
 
+
       ELSE
 # ifdef DEBUG
          write(utrace,*) 'Unexpected value for bndmin: ', bndmin
@@ -470,22 +492,25 @@
 
       ENDIF
 
+
       do i= fznp-1, fznp-5, -1
          xl(i) = xl(i+1) - dx(i)
          xr(i) = xr(i+1) - dx(i+1)
          x(i)  = 0.5*(xl(i) + xr(i))
       enddo
 
+
+
+
       ENDIF
       
-!--------------------------------------------------------------- RIGHT BOUNDARY 
 
       IF ((xyswp == 1 .and. mpi_coords(1) == mpi_dims(1)-1) .or. &
       (xyswp == 2 .and. mpi_coords(2) == mpi_dims(2)-1) .or. &
       (xyswp == 3 .and. mpi_coords(3) == mpi_dims(3)-1)) THEN 
-
-! REFLECTING BOUNDARY
+!RIGHT BOUNDARY
       IF (bndmax == 1) THEN
+!Reflecting boundary
          do i= 1, 5
             rho(nznp+i)  =  rho(nznp+1-i)
             rhoe(nznp+i) =  rhoe(nznp+1-i)
@@ -498,55 +523,23 @@
             dx(nznp+i)   =  dx(nznp+1-i)
          enddo
 
-! FLOW-OUT BOUNDARY
       ELSE IF (bndmax == 2) THEN
+!Flow-out boundary
+         do i= nznp+1, nznp+5
+            rho(i)  = rho(nznp)
+            rhoe(i) = rhoe(nznp)
+            rhopr(i)= rho(i) - rhoe(i) 
+            vel(i)  = vel(nznp)
+            velt(i) = velt(nznp)
+            veltt(i)= veltt(nznp)
+            p(i)    = p(nznp)
+            f(i)    = f(nznp)
+            dx(i)   = dx(nznp)
+         enddo
 
-         if  (basenm(3:3) == 'C') then
 
-            do i = nznp+1, nznp+5
-   
-               rho(i) = cortex(i-nznp)%densty
-               tem_s = cortex(i-nznp)%tem
-               xe = 1.0/1836.11
-
-               rhoe(i)  = rho(i)*xe
-               rhopr(i) = rho(i) - rhoe(i)
-
-               ze = me / tem_s
-               zp = mp / tem_s
-               meff1 = (1.0-1./1836.110)/mp + 1./1836.110/me
-               dpdrho = tem_s*meff1
-
-               p(i) = rho(i)*dpdrho
-               f(i)    = 0.0 ! ambient medium tracer
-               vel(i)  = 0.0 ! ambient medium velocities
-               velt(i) = 0.0
-               veltt(i)= 0.0
-               dx(i)   = dx(nznp)
-
-               ! print*, 'i-nznp:', i-nznp, 'rho(i):', rho(i), 'tem', tem_s, 'dx(i)', dx(i)
-               ! stop
-
-            enddo
-
-         ! Other basenm
-         else
-            do i= nznp+1, nznp+5
-               rho(i)  = rho(nznp)
-               rhoe(i) = rhoe(nznp)
-               rhopr(i)= rho(i) - rhoe(i) 
-               vel(i)  = vel(nznp)
-               velt(i) = velt(nznp)
-               veltt(i)= veltt(nznp)
-               p(i)    = p(nznp)
-               f(i)    = f(nznp)
-               dx(i)   = dx(nznp)
-            enddo
-
-         endif
-
-!PERIODIC BOUNDARY
       ELSE IF (bndmax == 4) THEN
+!Periodic boundary
          do i= 1, 5
             rho (nznp+i) = rho (i)
             rhoe (nznp+i) = rhoe (i)
@@ -559,9 +552,10 @@
             dx  (nznp+i) = dx  (i)
          enddo
 
-! Special boundary inflow condition 
-! for the cylindrical radial shock reflection in 1d
+
       ELSE IF (bndmax == 5) THEN
+!     Special boundary Inflow condition for the cylindrical radial
+!     shock reflection in 1d
          do i= nznp+1, nznp+5
             dx(i)   = dx(nznp)
             xl(i)   = xl(i-1) + dx(i-1)
@@ -577,8 +571,10 @@
             f(i)    = f(nznp)
          enddo
 
-! Special boundary: fixed decreasing atmosphere
+
       ELSE IF (bndmax == 6) THEN
+! Special boundary
+! Fixed decreasing atmosphere
          gamm1 = 1.0 / (gamma_ad - 1.0)
 
          do i= 1, 5
@@ -593,10 +589,11 @@
             dx(nznp+i)    = dx(nznp)
          enddo
 
-
-!OUTFLOW+EXHAUSTIVE BOUNDARY FOR JETS
       ELSE IF (bndmax == 7) THEN
+!Outflow + Exhaustive boundary for jets
+
 !         gamm1 = 1.0 / (gamma_ad - 1.0)
+
          do i= 1, 5
 !            if ((f(nznp) >= 0.01) .OR. (vel(nznp) >= 0.0)) then
                rho(nznp+i)  = rho(nznp)
@@ -634,10 +631,11 @@
 !            endif
          enddo
 
-!Spherical SHOCK REFLECTION TEST 
-!in spherical or cylindrical coordinates copy left boundary values and reflect velocity
-!(this is a trick to get perfect symmetry)
       ELSE IF (bndmax == 8) THEN
+!     spherical shock reflection test in spherical or cylindrical
+!     coordinates copy left boundary values and reflect velocity
+!     this is a trick to get perfect symmetry!
+
          do i=nznp+1, nznp+5
             rho(i)   =  rho(nznp+1-i)
             rhoe(i)  =  rhoe(nznp+1-i)
@@ -653,8 +651,9 @@
             xr(i)    = -xl(nznp+1-i)            
          enddo
 
-! WIND INFLOW BOUNDARY CONDITIONS
       ELSE IF (bndmax == 9) THEN
+!     Wind inflow boundary conditions
+
          do i=nznp+1, nznp+5
             rho(i)  = 1.0
             rhoe(i) = rho(i)/1836.11
@@ -670,8 +669,8 @@
             dx(i)   = dx(nznp)
          enddo
 
-! FLOW-OUT BOUNDARY WITH APPROX
       ELSE IF (bndmin == 10) THEN
+!Flow-out boundary with approx... 
          do i= nznp+1, nznp+5
             rho(i)  = (rho(nznp)-rho(nznp-1))/(x(nznp)-x(nznp-1))*(x(i)-x(nznp))+rho(nznp)
 !            rhoe(i)  = (rhoe(nznp)-rhoe(nznp-1))/(x(nznp)-x(nznp-1))*(x(i)-x(nznp))+rhoe(nznp) 
@@ -690,6 +689,7 @@
             dx(i)   = dx(nznp)
          enddo
 
+
       ENDIF
 
       do i=nznp+1, nznp+5
@@ -700,35 +700,6 @@
 
       ENDIF
 
-!************************************************************************************
-      
-      contains
-
-      FUNCTION interpolate(x, xp, fp) result(fp_interp)
-
-      real(8), intent(in) :: x
-      real(8), dimension(10000), intent(in) :: xp, fp
-      real(8) :: fp_interp
-      integer :: j
-   
-      j = 1
-      do while (xp(j) < x .and. j < size(xp))
-         j = j + 1
-      end do
-
-      if (j == 1) then
-         fp_interp = fp(1)
-      else if (j == size(xp)) then
-         fp_interp = fp(size(xp))
-      else
-         fp_interp = fp(j-1) + (x - xp(j-1)) * (fp(j) - fp(j-1)) / (xp(j) - xp(j-1))
-      end if
-      END
-
-!************************************************************************************ 
-
-
 !-----------------------------------------------------------------------------END
-
       END subroutine bndry
 

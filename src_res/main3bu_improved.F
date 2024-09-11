@@ -133,7 +133,7 @@
 
       character(len=256) :: program_name, tmpStr
 
-      type(Tbounds), allocatable :: xcortex(:,:,:), ycortex(:,:,:), zcortex(:,:,:)
+      type(Tbounds) :: fxcortex(:,:,:), nxcortex(:,:,:), fycortex(:,:,:), nycortex(:,:,:), fzcortex(:,:,:), nzcortex(:,:,:)
       
 !--------------------------------------------------------------------------BEGIN
       
@@ -274,7 +274,7 @@
 #endif  
 
 !-------------------------------------------- STARTING/RESTARTING THE SIMULATION
-
+      
       imin  = mpi_coords(1) * nx       
       jmin  = mpi_coords(2) * ny       
       kmin  = mpi_coords(3) * nz      
@@ -376,12 +376,7 @@
          ! NEW simulation
          if (irstrt == 0) then
 
-            allocate(xcortex(-4:5,ny,nz), stat= ierr)
-            allocate(ycortex(nx,-4:5,nz), stat= ierr)
-            allocate(zcortex(nx,ny,-4:5), stat= ierr)
-            print*,'Allocation done; nx, ny, nz:',nx,ny,nz
-
-            call init( basenm, nmod, nstep,                            &
+            call init( basenm, nmod, nstep,                  &
                   nx, ny, nyt, nz, mnx1, mnx5, mny1, mny5, mnz1, mnz5, &
                   mn1, mn5, mn6,                                       &
                   nyold, nxtot, nxo, nztot, nzo,                       &
@@ -395,8 +390,8 @@
                   zznl, zzn, zznr, pha, frs, fra, rhoa, pa, dpady,     &                       
                   A0, uwi, vwi, vwp, rhowp, uwp, vk, shift, rorb,      &                                                            
                   rho_0a, R_b, pc, c, kb, m_0, me, mp, q0,             &
-                  mloss0, ncl, nz2, ic, jc, kc, physic, &
-                  xcortex, ycortex, zcortex )
+                  mloss0, ncl, nz2, ic, jc, kc, physic,                &
+                  fxcortex, nxcortex, fycortex, nycortex, fzcortex, nzcortex )
 
             if (cartrank==0) then
                print*, '------------------ MAIN: after init ------------------'
@@ -533,6 +528,7 @@
          physic, xCPUs, yCPUs, zCPUs ) 
 #endif 
          call par_barrier( )
+
 
          ! Comunicate positions bounds between processors
          call intercambiaBoundPos( nx, xzn, xznl, xznr, ny, yzn, yznl, yznr, nz, zzn, zznl, zznr, boundPosX, boundPosY, boundPosZ )
@@ -698,7 +694,7 @@
                   print*,'----------------------------------------------------'
                endif
 
-               call sweeps(basenm, rkin, igodu, igeomx, igeomy, igeomz,            &
+               call sweeps( basenm, rkin, igodu, igeomx, igeomy, igeomz,            &
                bndmnx, bndmxx, bndmny, bndmxy, bndmnz, bndmxz,       &
                nx, nz, nsdim, ny, nys, xyswp, mnx5, mny5, mnz5,      &
                alpha_R, beta_R, gamma_ad, dt,                        &
@@ -711,7 +707,7 @@
                nmod, ipr, A0, gridly, fra, frs, pha, pa, rhoa,       &
                xznl, xzn, xznr, yznl, yzn, yznr, zznl, zzn, zznr,    &
                boundPosX, boundPosY, boundPosZ, grav, physic, curth, &
-               xcortex, ycortex, zcortex )
+               fxcortex, nxcortex, fycortex, nycortex, fzcortex, nzcortex )
 
                if (mod(nstep,50) == 0  .and. rkin==1 .and. mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1) then
                   ! print*,'------- MAIN: after sweeps, old parameters --------'
@@ -884,7 +880,6 @@
          grav )
          deallocate( physic )
          deallocate( boundPosX, boundPosY, boundPosZ ) 
-         deallocate( xcortex, ycortex, zcortex )
       endif
 
       call par_end()
