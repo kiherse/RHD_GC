@@ -108,7 +108,7 @@
       dist, ran1, vwp, rhowp, uwp, yc, rstar, csp
 
       integer(is) :: idum, ncl, ic(2000), jc(2000), kc(2000)
-      integer(is) :: ii, jj
+      integer(is) :: ii, jj, kk
       
       real(rs), allocatable:: xznl(:), xzn(:), xznr(:), &
       yznl(:), yzn(:), yznr(:), &
@@ -133,6 +133,10 @@
 
       character(len=256) :: program_name, tmpStr
 
+      character(256)::fich, fich2
+      integer(is):: ini, ifi, jni, jfi, kni, kfi, deltax, deltay
+
+      real(4), allocatable :: scr_dens(:,:,:), scr_temp(:,:,:)
       type(Tbounds), allocatable :: xcortex(:,:,:), ycortex(:,:,:), zcortex(:,:,:)
       
 !--------------------------------------------------------------------------BEGIN
@@ -216,6 +220,47 @@
          mp     = mp_cgs / m_0
       endif
 
+      !--------------------------------------------------- J3C*: reading ICM cubes
+
+      allocate (scr_dens(2048,2048,2048), stat= ierr)
+      allocate (scr_temp(2048,2048,2048), stat= ierr)
+
+      if (basenm(4:4) == '0') then   
+         fich= '/storage/scratch/lv72/lv72805/D02/2048_256kpc/dens_D02_091'
+      elseif (basenm(4:4) == '3') then
+         fich= '/storage/scratch/lv72/lv72805/D03/2048_256kpc/dens_D03_091'
+      elseif (basenm(4:4) == '6') then
+         fich= '/storage/scratch/lv72/lv72805/D06/2048_256kpc/dens_D06_091'
+      elseif (basenm(4:4) == '1') then
+         fich= '/storage/scratch/lv72/lv72805/D10/2048_256kpc/dens_D10_091'
+      endif
+
+      open( 1, file=fich, form='unformatted', status='old', iostat=ierr )
+      if (ierr/=0) then
+        call ERROR( 'File reading: Error openning ', fich, __FILE__, __LINE__ )
+      endif
+      read(1) (((scr_dens(i,j,k), i=1,2048), j=1,2048), k=1,2048)
+      close(1)
+
+      if (basenm(4:4) == '0') then
+         fich2= '/storage/scratch/lv72/lv72805/D02/2048_256kpc/temp_D02_091'
+      elseif (basenm(4:4) == '3') then
+         fich2= '/storage/scratch/lv72/lv72805/D03/2048_256kpc/temp_D03_091'
+      elseif (basenm(4:4) == '6') then
+         fich2= '/storage/scratch/lv72/lv72805/D06/2048_256kpc/temp_D06_091'
+      elseif (basenm(4:4) == '1') then
+         fich2= '/storage/scratch/lv72/lv72805/D10/2048_256kpc/temp_D10_091'
+      endif
+
+      open( 2, file=fich2, form='unformatted', status='old', iostat=ierr )                                                       
+      if (ierr/=0) then
+        call ERROR( 'File reading: Error openning ', fich2, __FILE__, __LINE__ )                                                      
+      endif
+      read(2) (((scr_temp(i,j,k), i=1,2048), j=1,2048), k=1,2048)
+      close(2)
+      
+      !------------------------------------------------------------------------------
+
       ! MPI & OMP initialitation
       call mpi_init3D (xCPUs, yCPUs, zCPUs, nsdim)
       !   print*, ' MAIN:  after MPI_INIT'
@@ -238,8 +283,11 @@
       mny1, mny5, mny6, mnz1, mnz5, mnz6, ny0 )
 
       if (cartrank==0) then
-         print*,'--------------------------- MAIN ----------------------------------'
-         print*,'Whole grid nx, ny, nz:',nxtot, nytot, nztot
+         print*,''
+         print*,'STARTING/RESTARTING SIMULATION ',basenm
+         print*,''
+         print*,'-------------------------------------------------------------------'
+         print*,'Whole grid nxtot, nytot, nztot:',nxtot, nytot, nztot
          print*,'After reparto_trabajo nx, ny, nz, mnx5, mny5, mnz5, cartrank:'
          print*,nx,ny,nz, mnx5, mny5, mnz5,cartrank
          print*,'-------------------------------------------------------------------'
@@ -251,7 +299,7 @@
       zznl(mnz1), zzn(mnz1), zznr(mnz1),             &
       grav(-4:mny5), rhoa(-4:mny5),                  &
       pa(-4:mny5), dpady(-4:mny5), stat=ierr )
-
+  
       ! Feasible errors in allocation
       if (ierr /= 0) then
          print*, 'Main ERROR. Allocation of main variables xznl, xzn, xznr, yznl, yzn, yznr, zznl, zzn, zznr, grav, rhoa, pa, dpady'
@@ -272,6 +320,57 @@
 #ifdef HDF
       call rrhdf5_init(H_openr, H_opend)
 #endif  
+
+      !--------------------------------------------------- J3C*: nodes boundary cortex
+
+      allocate(xcortex(-4:5,ny,nz), stat= ierr)
+      allocate(ycortex(nx,-4:5,nz), stat= ierr)
+      allocate(zcortex(nx,ny,-4:5), stat= ierr)
+
+      deltax = 640 ! Cell displacement in the x and z direction
+      deltay = 16 ! Cell displacement in the y direction 
+      ! equivalent to 2kpc when 4 cells/Rb resolution
+
+      ini=mpi_coords(1)*nx+deltax
+      ifi=ini+nx
+      jni=mpi_coords(2)*ny+deltay
+      jfi=jni+ny
+      kni=mpi_coords(3)*nz+deltax
+      kfi=kni+nz
+
+      ! Sweeps to fill the boundary cortex
+      if (mpi_coords(1) == 0 .or. mpi_coords(1) == (mpi_dims(1)-1)) then
+         do kk=1,nz
+            do jj=1,ny
+                  do ii=-4,5
+                     xcortex(ii,jj,kk)%densty = scr_dens(ii+ini,jj+jni,kk+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
+                     xcortex(ii,jj,kk)%tem = scr_temp(ii+ini,jj+jni,kk+kni)*kb/m_0/c**2
+                  enddo
+            enddo
+         enddo
+      endif
+
+      if (mpi_coords(2) == 0 .or. mpi_coords(2) == (mpi_dims(2)-1)) then
+         do kk=1,nz
+            do ii=1,nx
+                  do jj=-4,5
+                     ycortex(ii,jj,kk)%densty = scr_dens(ii+ini,jj+jni,kk+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
+                     ycortex(ii,jj,kk)%tem = scr_temp(ii+ini,jj+jni,kk+kni)*kb/m_0/c**2
+                  enddo
+            enddo
+         enddo
+      endif
+
+      if (mpi_coords(3) == 0 .or. mpi_coords(3) == (mpi_dims(3)-1)) then
+         do ii=1,nx
+            do jj=1,ny
+                  do kk=-4,5
+                     zcortex(ii,jj,kk)%densty = scr_dens(ii+ini,jj+jni,kk+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
+                     zcortex(ii,jj,kk)%tem = scr_temp(ii+ini,jj+jni,kk+kni)*kb/m_0/c**2
+                  enddo
+            enddo
+         enddo
+      endif
 
 !-------------------------------------------- STARTING/RESTARTING THE SIMULATION
 
@@ -299,12 +398,6 @@
                call ERROR( 'MAIN', 'Check input file suffix', __FILE__, __LINE__ )
             endif
 
-            if (cartrank == 0) then
-               write(6,*) ' '
-               write(6,*) 'MAIN: Constructing new initial model'
-               write(6,*) ' '
-            endif  
-
             call grid( basenm, igeomx, nx, nx2, ny0, nyh, ny, nz, nz2,    &                                     
                nsdim, ixsym, izsym, iextrax, iextraz,             &                            
                delx, dely, delz, small,                           &                                
@@ -315,9 +408,13 @@
                                                                                                                                   
             call getWAMemorySpace( mn6, mn5, mn1, mnx1, mny1, mnz1, nx, ny, nyt, nz, mpi_dims(1), mpi_dims(2), mpi_dims(3) )     
 
-            if (cartrank==0) then
-               print*,'MAIN: grid done'
-            endif
+            if (cartrank == 0) then
+               write(6,*) ' '
+               write(6,*) 'MAIN: Constructing new initial model'
+               write(6,*) ' '
+               write(6,*) 'MAIN: grid done'
+               write(6,*) ' '
+            endif  
 
          ! RESTART simulation
          else if (irstrt == 1) then
@@ -325,12 +422,6 @@
             ! Read restart file (R)
             rstfil  = basenm//'R'//suffix
             datfil  = basenm//'D'//suffixd
-
-            if (cartrank == 0) then
-               write(6,*)
-               write(6,*) 'MAIN: Restarting from ', rstfil
-               write(6,*)
-            endif
          
             call grid(basenm, igeomx, nx, nx2, ny0, nyh, ny, nz, nz2,    &
                         nsdim, ixsym, izsym, iextrax, iextraz,             &
@@ -339,6 +430,14 @@
                         bndmnx, bndmxx, bndmny, bndmxy, bndmnz, bndmxz,    &
                         xznl, xzn, xznr, yznl, yzn, yznr, zznl, zzn, zznr, &
                         xCPUs, yCPUs, zCPUs )
+
+            if (cartrank == 0) then
+               write(6,*) ''
+               write(6,*) 'MAIN: Restarting from ', rstfil
+               write(6,*) ''
+               write(6,*) 'MAIN: grid done'
+               write(6,*) ' '
+            endif
 
             call getWAMemorySpace( mn6, mn5, mn1, mnx1, mny1, mnz1, nx, ny, nyt, nz, mpi_dims(1), mpi_dims(2), mpi_dims(3) )
 
@@ -376,11 +475,6 @@
          ! NEW simulation
          if (irstrt == 0) then
 
-            allocate(xcortex(-4:5,ny,nz), stat= ierr)
-            allocate(ycortex(nx,-4:5,nz), stat= ierr)
-            allocate(zcortex(nx,ny,-4:5), stat= ierr)
-            print*,'Allocation done; nx, ny, nz:',nx,ny,nz
-
             call init( basenm, nmod, nstep,                            &
                   nx, ny, nyt, nz, mnx1, mnx5, mny1, mny5, mnz1, mnz5, &
                   mn1, mn5, mn6,                                       &
@@ -396,14 +490,12 @@
                   A0, uwi, vwi, vwp, rhowp, uwp, vk, shift, rorb,      &                                                            
                   rho_0a, R_b, pc, c, kb, m_0, me, mp, q0,             &
                   mloss0, ncl, nz2, ic, jc, kc, physic, &
-                  xcortex, ycortex, zcortex )
+                  scr_dens, scr_temp)
 
-            if (cartrank==0) then
-               print*, '------------------ MAIN: after init ------------------'
-               print*, 'mpi_coords:', mpi_coords(1),mpi_coords(2),mpi_coords(3)
-               print*, 'cdenst,fg,physic(1,1,1)%pres,physic(1,1,1)%densty:'
-               print*,cdenst,fg,physic(1,1,1)%pres,physic(1,1,1)%densty
-               print*, '------------------------------------------------------'
+            if (cartrank == 0) then
+               write(6,*) ' '
+               write(6,*) 'MAIN: init done'
+               write(6,*) ' '
             endif
 
          ! RESTART simulation with GRID INCREASE
@@ -459,7 +551,8 @@
             small, epsiln, omg1, omg2, me, mp,                        &
             fg, shift, rm, kb, m_0, c, tem0, tem1,                    &
             xznl, xzn, xznr, yznl, yzn, yznr, zznl, zzn, zznr,        &
-            boundPosX, boundPosY, boundPosZ, rhoa, pa, grav, physic )
+            boundPosX, boundPosY, boundPosZ, rhoa, rho_0a, pa, grav, physic,  &
+            scr_dens, scr_temp, xcortex, ycortex, zcortex  )
             
          endif
 
@@ -491,9 +584,9 @@
          datfil  = basenm//'D'//suffixd
 
          if (cartrank == 0) then
-            write(6,*)
+            write(6,*) ''
             write(6,*) 'MAIN: Restarting from ', rstfil
-            write(6,*)
+            write(6,*) ''
          endif
          
          call grid( basenm, igeomx, nx, nx2, ny0, nyh, ny, nz, nz2,    &
@@ -539,33 +632,6 @@
          call par_barrier( ) 
          nbegin = nstep + 1
 
-         ! ! Print initial conditions but when restarting (except gamma)
-         ! if (cartrank == 0) then
-         !    print*,' '
-         !    print*,'---------------------------------------------------------------------'
-         !    print*,'RESTART: variables as in input_j.dat'
-         !    print*,gamma_ad,velb,rhob,rhoeb,temb,machb,radius,cdenst,shift,ms,q0,fg,rm
-         !    print*,oang,dk1,dk2,psh1,psh2,nn,mm1,mm2,ipr,tem0,tem1,mclouds,alpn,betn,gamn
-         !    print*,rbn,brt,t0,t1,vptbd,rptbd,pptbd,itdelay,suffixd
-         !    print*,' '
-
-         !    epsb = pb/(gamb - 1.)/rhob
-         !    ! the gamma is computed in the eosynge and hence cannot be used here,
-         !    ! we would need to redefine it with the eosynge of smth for getting the input gamma
-         !    hb   = 1.+ gamb*epsb
-         !    lofb = 1./sqrt(1.-velb*velb)
-         !    ! lk = (hb*lofb-1.)*rhob*rho_0a*lofb*acos(-1.)*(R_b)**2*velb*c**3 
-         !    lk = hb*lofb**2*rhob*rho_0a*acos(-1.)*(R_b)**2*velb*c**3 ! including rest mass
-         !    print*,' '
-         !    print*,'RESTART: jet physical input'
-         !    print*,'gamb,epsb,hb,lofb,rhob,rho_0a,R_b,velb:'
-         !    print*,gamb,epsb,hb,lofb,rhob,rho_0a,R_b,velb
-         !    print*,' '
-         !    print*,'Jet kinetic power (cgs)', lk
-         !    print*,'---------------------------------------------------------------------'
-         !    print*,' '
-         ! endif
-
          ! Mass loading from stars  
          if (basenm(1:1) == 'J' .and. basenm(3:3) == 'M') then
             call stmass( igeomx, igeomy, nx, ny, nz, mnx1, &
@@ -587,11 +653,13 @@
             hb   = 1.+ gamb*epsb
             lofb = 1./sqrt(1.-velb*velb)
             lk = (hb*lofb-1.)*rhob*rho_0a*lofb*acos(-1.)*(R_b)**2*velb*c**3
+            print*,''
             print*,'----------------- MAIN: jet properties --------------------'
             print*,'gamb,epsb,hb,lofb,rhob,rho_0a,R_b,velb:'
             print*,gamb,epsb,hb,lofb,rhob,rho_0a,R_b,velb
             print*,'Jet kinetic power (cgs)', lk
             print*,'------------------------------------------------------------'
+            print*,''
          endif
       ENDIF
 
@@ -607,6 +675,8 @@
          print*,'Moment: ',physic(324,217,217)%momenx,physic(324,217,217)%momeny,physic(324,217,217)%momenz
          print*,'----------------------------------------------------'
       endif
+
+      deallocate (scr_dens, scr_temp)
 
 !-------------------------------------------------------------- TIME EVOLUTION
 
@@ -697,7 +767,7 @@
                   print*,'Moment: ',physic(324,217,217)%momenx,physic(324,217,217)%momeny,physic(324,217,217)%momenz
                   print*,'----------------------------------------------------'
                endif
-
+               
                call sweeps(basenm, rkin, igodu, igeomx, igeomy, igeomz,            &
                bndmnx, bndmxx, bndmny, bndmxy, bndmnz, bndmxz,       &
                nx, nz, nsdim, ny, nys, xyswp, mnx5, mny5, mnz5,      &

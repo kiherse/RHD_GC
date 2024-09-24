@@ -391,57 +391,7 @@
             endif
          enddo
 
-!! Wind inflow boundary conditions
-
-!         do i=nznp+1, nznp+5
-!            xl(i) = xl(i-1) + dx(nznp)
-!            xr(i) = xr(i-1) + dx(nznp)
-!            x(i)  = 0.5*(xl(i) + xr(i))
-     
- !            radi  = sqrt(xzn(i)**2+(yzn(j)+shift)**2+zzn(k)**2)
- !            rhoa3 = 1./(1.+(radi/psh1)**nn)**(mm1/nn)      & 
- !                       + fg*1./(1.+(radi/psh2)**nn)**(mm2/nn)
-
- !            rho_sy(1)=rhoa3
-                   
- !            xe_s(1)  = 1.0/1836.110
-
- !            if (radi < rm) then 
- !              tem_s(1)=(tem0+(tem1-tem0)*radi/rm)*kb/m_0/c**2
- !              if (tem_s(1) > tem1*kb/m_0/c**2) tem_s(1)=tem1*kb/m_0/c**2
- !            else
- !                tem_s(1)=tem1*kb/m_0/c**2
- !            endif
-
-          
- !            call eos_synge( 1, tid, 1, 1, me, mp, rho_sy, xe_s, tem_s, eps_sy,   &
- !                          p_sy, gam_s, h_s, cs_s, dpdrho_s, dpdeps_s)          
-
-  !          vel(i)  =  vwi
-  !          velt(i) =  0.0
-  !          veltt(i)=  0.0
-
-  !           idum=-3
-
-  !           rhoco = ran1(idum)*0.2-0.1
-
-
-  !           physic(i,j,k)%tracer = 0.0
-
-  !          physic(i,j,k)%densty  = rho_sy(1)+rho_sy(1)*rhoco
-  !          physic(i,j,k)%denstye = xe_s(1)*physic(i,j,k)%densty
-  !          physic(i,j,k)%pres    = p_sy(1)
-  !          physic(i,j,k)%opres   = physic(i,j,k)%pres 
-            
-  !          epsco = p_sy(1)/(gam_s(1)-1.0)/physic(i,j,k)%densty - eps_sy(1)
-
-  !          physic(i,j,k)%eps     = eps_sy(1)+epsco
-     
-   !         f(i)    =  0.0
-   !         dx(i)   = dx(nznp)
-   ! enddo
-
-
+         
 
       ELSE IF (bndmin == 10) THEN
 !Flow-out boundary with approx... 

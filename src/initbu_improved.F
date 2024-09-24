@@ -32,7 +32,7 @@
       dpady, A0, uwi, vwi, vwp, rhowp, uwp, vk, shift,        &
       rorb, rho_0a, R_b, pc, c, kb, m_0, me, mp, q0,          &
       mloss0, ncl, nz2, ic, jc, kc, physic,                   &
-      xcortex, ycortex, zcortex )
+      scr_dens, scr_temp)
 
       USE constantes
       USE parallel
@@ -74,6 +74,8 @@
       
       real(rs)   :: A0, pha(25), frs(25), fra(25)
 
+      real(4) :: scr_dens(2048,2048,2048), scr_temp(2048,2048,2048)
+
 !------------------------------------------------------Output Variables
 
       real(rs)   :: pa(-4:mny5), dpady(-4:mny5), rhoa(-4:mny5)
@@ -83,8 +85,6 @@
       type(Tphysic):: physic(-4:mnx5,-4:mny5,-4:mnz5)
 
 !-------------------------------------------------------Local Variables
-
-      character(256)::fich, fich2
 
       character(4),external :: int2ch4
 
@@ -131,10 +131,6 @@
     character(72) :: text
 
     external ran1, ran0
-
-    real(4), pointer :: scr(:,:,:)
-
-    type(Tbounds) :: xcortex(-4:5,ny,nz),ycortex(nx,-4:5,nz),zcortex(nx,ny,-4:5)
 
 !     --------- CODI FELIX
       integer                     :: total_grups, restes
@@ -330,28 +326,31 @@
       enddo
 
       if (cartrank == 0) then
+        print *, ''
         print *, '---------- beam and medium parameters ----------'
         print *, '  vb [c]        = ', velb
         print *, '  Mb            = ', velb/sqrt(csb2)
         print *, '  Tb [K]        = ', temb*m_0*c**2/kb
-        tema= physic(nx/2,1,nz/2)%pres/ (physic(nx/2,1,nz/2)%denstye/me &
-              + (physic(nx/2,1,nz/2)%densty-physic(nx/2,1,nz/2)%denstye)/mp )
+        tema= physic(nx,1,nz)%pres/ (physic(nx,1,nz)%denstye/me &
+              + (physic(nx,1,nz)%densty-physic(nx,1,nz)%denstye)/mp )
         print *, '  Tm [K]        = ', tema*m_0*c**2/kb
         print *, '  rhob [g*cm-3] = ', rhob*rho_0a
         print *, '  rhom [g*cm-3] = ', rho_0a
         print *, '  eta           = ', rhob
         print *, '  Xeb           = ', rhoeb/rhob
         print *, '  epsb [c2]     = ', epsb
-        print *, '  epsm [c2]     = ', physic(nx/2,1,nz/2)%eps 
+        print *, '  epsm [c2]     = ', physic(nx,1,nz)%eps 
         print *, '  pb [c2]       = ', pb
-        print *, '  pm [c2]       = ', physic(nx/2,1,nz/2)%pres
-        print *, '  pb/pm         = ', pb/physic(nx/2,1,nz/2)%pres
+        print *, '  pm [c2]       = ', physic(nx,1,nz)%pres
+        print *, '  pb/pm         = ', pb/physic(nx,1,nz)%pres
         print *, '  gamb          = ', gamb
         print *, '  gamm          = ', gam_s(1)
         etars = (rhob*hb/h_s(1))/(1-velb**2)
         print *, '  vjet1d [c]    = ', velb*sqrt(etars)/    &
                   (1.0+sqrt(etars))
         print *, '------------------------------------------------'
+        print *, ''
+        
       endif      
    ENDIF
 
@@ -439,10 +438,6 @@
 
       else if (basenm(3:3) == 'C') then
 
-         !allocate (scr(512,512,512), stat= ierr)
-         !allocate (scr(1024,1024,1024), stat= ierr)
-         allocate (scr(2048,2048,2048), stat= ierr)
-
          deltax = 640 ! Cell displacement in the x and z direction
          deltay = 16 ! Cell displacement in the y direction 
          ! equivalent to 2kpc when 4 cells/Rb resolution
@@ -454,88 +449,18 @@
          kni=mpi_coords(3)*nz+deltax
          kfi=kni+nz
 
-         if (basenm(4:4) == '0') then   
-            ! fich= '/storage/scratch/lv72/lv72805/D02/512_256kpc/dens_D02_091'
-            ! fich= '/storage/scratch/lv72/lv72805/D02/1024_256kpc/dens_D02_091'
-            fich= '/storage/scratch/lv72/lv72805/D02/2048_256kpc/dens_D02_091'
-         elseif (basenm(4:4) == '3') then
-            fich= '/storage/scratch/lv72/lv72805/D03/2048_256kpc/dens_D03_091'
-         elseif (basenm(4:4) == '6') then
-            fich= '/storage/scratch/lv72/lv72805/D06/2048_256kpc/dens_D06_091'
-         elseif (basenm(4:4) == '1') then
-            fich= '/storage/scratch/lv72/lv72805/D10/2048_256kpc/dens_D10_091'
-         endif
-
-         open( 1, file=fich, form='unformatted', status='old', iostat=ierr )
-         if (ierr/=0) then
-           call ERROR( 'initbu: Error openning ', fich, __FILE__, __LINE__ )
-         endif
-         ! read(1) (((scr(i,j,k), i=1,512), j=1,512), k=1,512)
-         ! read(1) (((scr(i,j,k), i=1,1024), j=1,1024), k=1,1024)
-         read(1) (((scr(i,j,k), i=1,2048), j=1,2048), k=1,2048)
-         close(1)
-
          do kk=1,nz
             do jj=1,ny
-
                do ii=1,nx
-                  physic(ii,jj,kk)%densty = scr(ii+ini,jj+jni,kk+kni)*2.*0.72**2 /(3.18)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
+                  physic(ii,jj,kk)%densty = scr_dens(ii+ini,jj+jni,kk+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
                enddo
-
-               ! Save ghost cells for boundary routine later on
-               if (mpi_coords(1) == 0 .or. mpi_coords(1) == (mpi_dims(1)-1)) then
-                  do ii=-4,5
-                     xcortex(ii,jj,kk)%densty = scr(ii+ini,jj+jni,kk+kni)*2.*0.72**2 /(3.18)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
-                  enddo
-               endif
             enddo
          enddo
-
-         do kk=1,nz
-            do ii=1,nx
-               if (mpi_coords(2) == 0 .or. mpi_coords(2) == (mpi_dims(2)-1)) then
-                  do jj=-4,5
-                     ycortex(ii,jj,kk)%densty = scr(ii+ini,jj+jni,kk+kni)*2.*0.72**2 /(3.18)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
-                  enddo
-               endif
-            enddo
-         enddo
-
-         do ii=1,nx
-            do jj=1,ny
-               if (mpi_coords(3) == 0 .or. mpi_coords(3) == (mpi_dims(3)-1)) then
-                  do kk=-4,5
-                     zcortex(ii,jj,kk)%densty = scr(ii+ini,jj+jni,kk+kni)*2.*0.72**2 /(3.18)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
-                  enddo
-               endif
-            enddo
-         enddo
-
-         if (basenm(4:4) == '0') then
-            ! fich= '/storage/scratch/lv72/lv72805/D02/512_256kpc/temp_D02_091'
-            ! fich= '/storage/scratch/lv72/lv72805/D02/1024_256kpc/temp_D02_091'
-            fich= '/storage/scratch/lv72/lv72805/D02/2048_256kpc/temp_D02_091'
-         elseif (basenm(4:4) == '3') then
-            fich= '/storage/scratch/lv72/lv72805/D03/2048_256kpc/temp_D03_091'
-         elseif (basenm(4:4) == '6') then
-            fich= '/storage/scratch/lv72/lv72805/D06/2048_256kpc/temp_D06_091'
-         elseif (basenm(4:4) == '1') then
-            fich= '/storage/scratch/lv72/lv72805/D10/2048_256kpc/temp_D10_091'
-         endif
-
-         open( 2, file=fich, form='unformatted', status='old', iostat=ierr )                                                       
-         if (ierr/=0) then
-           call ERROR( 'initbu: Error openning ', fich, __FILE__, __LINE__ )                                                      
-         endif
-         ! read(2) (((scr(i,j,k), i=1,512), j=1,512), k=1,512)
-         ! read(2) (((scr(i,j,k), i=1,1024), j=1,1024), k=1,1024)
-         read(2) (((scr(i,j,k), i=1,2048), j=1,2048), k=1,2048)
-         close(2)
 
          do k=1,nz
             do j=1,ny
                do i=1,nx
-                  tem_s(1) = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
+                  tem_s(1) = scr_temp(i+ini,j+jni,k+kni)*kb/m_0/c**2
                   rho_sy(1) = physic(i,j,k)%densty
                   xe_s(1)  = 1.0/1836.110
 
@@ -554,7 +479,7 @@
                                              - physic(i,j,k)%velz   &
                                              * physic(i,j,k)%velz)
 
-                  physic(i,j,k)%densty  = rho_sy(1)+rho_sy(1)*rhoco
+                  physic(i,j,k)%densty  = rho_sy(1)
                   physic(i,j,k)%denstye = xe_s(1)*physic(i,j,k)%densty
                   physic(i,j,k)%pres    = p_sy(1)
                   physic(i,j,k)%opres   = physic(i,j,k)%pres 
@@ -575,59 +500,31 @@
                                           - physic(i,j,k)%denstw
 
                enddo
-
-               ! Save ghost cells for boundary routine later on
-               if (mpi_coords(1) == 0 .or. mpi_coords(1) == (mpi_dims(1)-1)) then
-                  do i=-4,5
-                     xcortex(i,j,k)%tem = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
-                  enddo
-               endif
             enddo
          enddo
-
-         do k=1,nz
-            do i=1,nx
-               if (mpi_coords(2) == 0 .or. mpi_coords(2) == (mpi_dims(2)-1)) then
-                  do j=-4,5
-                     ycortex(i,j,k)%tem = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
-                  enddo
-               endif
-            enddo
-         enddo
-
-         do i=1,nx
-            do j=1,ny
-               if (mpi_coords(3) == 0 .or. mpi_coords(3) == (mpi_dims(3)-1)) then
-                  do k=-4,5
-                     zcortex(i,j,k)%tem = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
-                  enddo
-               endif
-            enddo
-         enddo
-
-         deallocate (scr)
-
       endif
 
       if (cartrank == 0) then
 
-        tema= physic(nx/4,1,nz/4)%pres/ (physic(nx/4,1,nz/4)%denstye/me &
-              + (physic(nx/4,1,nz/4)%densty-physic(nx/4,1,nz/4)%denstye)/mp )
+        tema= physic(nx,1,nz)%pres/ (physic(nx,1,nz)%denstye/me &
+              + (physic(nx,1,nz)%densty-physic(nx,1,nz)%denstye)/mp )
         etars = (rhob*hb/h_s(1))/(1-velb**2)
         print *, '---------- INIT: beam and medium parameters ----------'
+        print *, '  Node 0 in     = ', nx, 1, nz
         print *, '  vb [c]        = ', velb
         print *, '  Mb            = ', velb/sqrt(csb2)
         print *, '  Tb [K]        = ', temb*m_0*c**2/kb
         print *, '  Tm [K]        = ', tema*m_0*c**2/kb
         print *, '  rhob [g*cm-3] = ', rhob*rho_0a
-        print *, '  rhom [g*cm-3] = ', rho_0a
+        print *, '  rhom [g*cm-3] = ', physic(nx,1,nz)%densty*rho_0a
+        print *, '  rho_0a [g*cm-3] = ', rho_0a
         print *, '  eta           = ', rhob
         print *, '  Xeb           = ', rhoeb/rhob
         print *, '  epsb [c2]     = ', epsb
-        print *, '  epsm [c2]     = ', physic(nx/4,1,nz/4)%eps 
+        print *, '  epsm [c2]     = ', physic(nx,1,nz)%eps 
         print *, '  pb [c2]       = ', pb
-        print *, '  pm [c2]       = ', physic(nx/4,1,nz/4)%pres
-        print *, '  pb/pm         = ', pb/physic(nx/4,1,nz/4)%pres
+        print *, '  pm [c2]       = ', physic(nx,1,nz)%pres
+        print *, '  pb/pm         = ', pb/physic(nx,1,nz)%pres
         print *, '  gamb          = ', gamb
         print *, '  gamm          = ', gam_s(1)
         print *, '  vjet1d [c]    = ', velb*sqrt(etars)/    &

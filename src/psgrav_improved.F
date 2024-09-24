@@ -16,7 +16,8 @@
       small, epsiln, omg1, omg2, me, mp,                        &
       fg, shift, rm, kb, m_0, c, tem0, tem1,                    &
       xznl, xzn, xznr, yznl, yzn, yznr, zznl, zzn, zznr,        &
-      boundPosX, boundPosY, boundPosZ, rhoa, pa, grav, physic )
+      boundPosX, boundPosY, boundPosZ, rhoa, rho_0a, pa, grav, physic,  &
+      scr_dens, scr_temp, xcortex, ycortex, zcortex  )
 
       USE tipos
       USE workarrays
@@ -31,7 +32,7 @@
 
       real(rs)   :: nn, psh1, psh2, mm1, mm2, gamma_ad, dk1, dk2, pb, &
       small, epsiln, omg1, omg2, me, mp, shift, fg, rm, &
-      tem0, tem1, m_0, kb, c, radi, rhoa3
+      tem0, tem1, m_0, kb, c, radi, rhoa3, rho_0a
 
       ! sizes mnx1, mny1, mnz1
       real(rs)   :: xznl(*), xzn(*), xznr(*), &
@@ -44,6 +45,9 @@
       type(TboundPosY) :: boundPosY(-4:5)
       type(TboundPosZ) :: boundPosZ(-4:5)
 
+      real(4) :: scr_dens(2048,2048,2048), scr_temp(2048,2048,2048)
+      type(Tbounds) :: xcortex(-4:5,ny,nz),ycortex(nx,-4:5,nz),zcortex(nx,ny,-4:5)
+
 !------------------------------------------------------Output Variables
 
       real(rs)     :: grav(-4:mny5)
@@ -51,7 +55,7 @@
 
 !-------------------------------------------------------Local Variables
 
-      integer(is):: tid, j, i, k, fzn, nzn, ini, ifi, jni, jfi, kni, kfi
+      integer(is):: tid, j, i, k, fzn, nzn, ini, jni, kni
       integer(is):: iniz, finz, deltax, deltay
       integer(is):: iniy, finy
       integer(is):: ierr
@@ -107,50 +111,9 @@
       dpdrho_s(1), dpdeps_s(1),     &
       ze(1),zp(1),meff1(1),dpdrho(1)
 
-      real(4), pointer :: scr(:,:,:)
-
 !-------------------------------------------------------------------------BEGIN
       
       nthreads = omp_th
-
-      ! SIMULATIONS ON COSMOLOGICAL BOXES
-      if (basenm(3:3) == 'C') then
-         ! allocate (scr(512,512,512), stat = ierr)
-         ! allocate (scr(1024,1024,1024), stat = ierr)
-         allocate (scr(2048,2048,2048), stat = ierr)
-
-         if (basenm(4:4) == '0') then
-            ! fich= '/storage/scratch/lv72/lv72805/D02/512_256kpc/temp_D02_091'
-            ! fich= '/storage/scratch/lv72/lv72805/D02/1024_256kpc/temp_D02_091'
-            fich= '/storage/scratch/lv72/lv72805/D02/2048_256kpc/temp_D02_091'
-         elseif (basenm(4:4) == '3') then
-            fich= '/storage/scratch/lv72/lv72805/D03/2048_256kpc/temp_D03_091'
-         elseif (basenm(4:4) == '6') then
-            fich= '/storage/scratch/lv72/lv72805/D06/2048_256kpc/temp_D06_091'
-         elseif (basenm(4:4) == '1') then
-            fich= '/storage/scratch/lv72/lv72805/D10/2048_256kpc/temp_D10_091'
-         endif
-
-         open( 2, file=fich, form='unformatted', status='old', iostat=ierr )                                                                           
-         if (ierr/=0) then
-            call ERROR( 'initbu: Error openning ', fich, __FILE__, __LINE__ )                                                                           
-         endif
-         ! read(2) (((scr(i,j,k), i=1,512), j=1,512), k=1,512)
-         ! read(2) (((scr(i,j,k), i=1,1024), j=1,1024), k=1,1024)
-         read(2) (((scr(i,j,k), i=1,2048), j=1,2048), k=1,2048)
-         close(2)
-
-         deltax = 640 ! Cell displacement in the x and z direction
-         deltay = 16 ! Cell displacement in the y direction 
-         ! equivalent to 2kpc when 4 cells/Rb resolution 
-
-         ini=mpi_coords(1)*nx+deltax
-         ifi=ini+nx
-         jni=mpi_coords(2)*ny+deltay
-         jfi=jni+ny
-         kni=mpi_coords(3)*nz+deltax
-         kfi=kni+nz
-      endif
 
 !$OMP PARALLEL DEFAULT(none) &
 !$OMP PRIVATE(tid, j, i, k, fzn, nzn) &
@@ -172,13 +135,14 @@
 !$OMP PRIVATE( x, xl, xr, dx, wm, wp, wl, wr, w, wvel, wvelt, wveltt) &
 !$OMP PRIVATE(rho_sy,xe_s,tem_s,eps_sy,p_sy,gam_s,h_s,cs_s,dpdrho_s,dpdeps_s)&
 !$OMP PRIVATE(radi,ze,zp,dpdrho,meff1) &
-!$OMP SHARED(epsiln, igodu, omg2, omg1, wa, basenm ) &
+!$OMP SHARED(epsiln, igodu, omg2, omg1, wa, basenm, rho_0a) &
 !$OMP SHARED(nx, ny, nz, small, physic, nn, psh1, grav, mm1, mm2, psh2) &
 !$OMP SHARED(boundPosX, boundPosY,boundPosZ ) &
 !$OMP SHARED(gamma_ad, dk1, dk2, pb, me, mp, rhoa, pa, cartrank) & 
 !$OMP SHARED(xzn, xznl, xznr, yzn, yznl, yznr, zzn, zznl,zznr ) &
-!$OMP SHARED(shift,fg,rm,kb,m_0,c,tem0,tem1,ini,jni,kni,scr)&
-!$OMP SHARED(mpi_coords, mpi_dims)
+!$OMP SHARED(shift,fg,rm,kb,m_0,c,tem0,tem1,ini,jni,kni)&
+!$OMP SHARED(mpi_coords, mpi_dims, deltax, deltay)&
+!$OMP SHARED(scr_dens, scr_temp, xcortex, ycortex, zcortex)
 
 # ifdef OPENMP
       call my_omp_get_thread_num(curth)
@@ -318,6 +282,13 @@
 
 !-------------------------------------------------------------------------
 
+      deltax = 640 ! Cell displacement in the x and z direction
+      deltay = 16 ! Cell displacement in the y direction: equivalent to 2kpc when 4 cells/Rb resolution
+
+      ini=mpi_coords(1)*nx+deltax
+      jni=mpi_coords(2)*ny+deltay
+      kni=mpi_coords(3)*nz+deltax
+
       IF (basenm(1:1) == 'J'.and.basenm(2:2) == '3') THEN
 
       !---------------------------------------------------- FIRST SWEEP: GRAVX. 
@@ -337,7 +308,7 @@
 
                   if (basenm(3:3) == 'C') then
                      rho(j) = physic(j,i,k)%densty
-                     tem_s(1) = scr(j+ini,i+jni,k+kni)*kb/m_0/c**2
+                     tem_s(1) = scr_temp(j+ini,i+jni,k+kni)*kb/m_0/c**2
                      rhoe(j) =  rho(j)/1836.110
                                     
                   else 
@@ -374,8 +345,8 @@
                      dx(j)   = boundPosX(j)%dx
 
                      if (basenm(3:3) == 'C') then
-                        rho(j) = physic(j,i,k)%densty
-                        tem_s(1) = scr(j+ini,i+jni,k+kni)*kb/m_0/c**2
+                        rho(j) = scr_dens(j+ini,i+jni,k+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20
+                        tem_s(1) = scr_temp(j+ini,i+jni,k+kni)*kb/m_0/c**2
                         rhoe(j) =  rho(j)/1836.110
                                  
                      else 
@@ -413,8 +384,8 @@
                      dx(j)   = boundPosX(j-nzn)%dx
 
                      if (basenm(3:3) == 'C') then
-                        rho(j) = physic(j,i,k)%densty
-                        tem_s(1) = scr(j+ini,i+jni,k+kni)*kb/m_0/c**2
+                        rho(j) = scr_dens(j+ini,i+jni,k+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 
+                        tem_s(1) = scr_temp(j+ini,i+jni,k+kni)*kb/m_0/c**2
                         rhoe(j) =  rho(j)/1836.110
                                        
                      else
@@ -452,11 +423,10 @@
                      xr(j)   = xr(j+1)-dx(j+1)
                      x(j)    = 0.5*(xl(j)+xr(j))
 
-                     if (basenm(3:3) == 'C') then                                               
-                        rho(j)  = rho(fzn) ! This is what we should change if we want to be more correct with the bndrybu
+                     if (basenm(3:3) == 'C') then
+                        rho(j) = xcortex(j,i,k)%densty
                         rhoe(j) =  rho(j)/1836.110
-                        tem_s(1) = scr(fzn+ini,i+jni,k+kni)
-                        tem_s(1) =  tem_s(1) *kb/m_0/c**2
+                        tem_s(1) = xcortex(j,i,k)%tem
 
                      else
                         radi  = sqrt(x(j)**2+(yzn(i)+shift)**2+zzn(k)**2)
@@ -492,11 +462,10 @@
                      xr(j)   = xr(j-1) + dx(j)
                      x(j)    = 0.5*(xl(j)+xr(j))
                  
-                     if (basenm(3:3) == 'C') then                                         
-                        rho(j)  =  rho(nzn)
+                     if (basenm(3:3) == 'C') then 
+                        rho(j) = xcortex(j-nzn,i,k)%densty
                         rhoe(j) =  rho(j)/1836.110
-                        tem_s(1)= scr(nzn+ini,i+jni,k+kni)
-                        tem_s(1) =  tem_s(1) *kb/m_0/c**2
+                        tem_s(1) = xcortex(j-nzn,i,k)%tem
 
                      else
                         radi  = sqrt(x(j)**2+(yzn(i)+shift)**2+zzn(k)**2)
@@ -720,7 +689,7 @@
                if (basenm(3:3) == 'C') then
                   do j=fzn,nzn
                      rho(j) = physic(i,j,k)%densty
-                     tem_s(1) = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
+                     tem_s(1) = scr_temp(i+ini,j+jni,k+kni)*kb/m_0/c**2
                      rhoe(j) =  rho(j)/1836.110
                      ze = me / tem_s(1)
                      zp = mp / tem_s(1)
@@ -731,8 +700,8 @@
                         
                   if (mpi_coords(2) /= 0) then  
                      do j = fzn-5,fzn-1
-                        rho(j) = physic(i,j,k)%densty
-                        tem_s(1) = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
+                        rho(j) = scr_dens(i+ini,j+jni,k+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 
+                        tem_s(1) = scr_temp(i+ini,j+jni,k+kni)*kb/m_0/c**2
                         rhoe(j) =  rho(j)/1836.110
                         ze = me / tem_s(1)
                         zp = mp / tem_s(1)
@@ -742,10 +711,9 @@
                      enddo
                   else 
                      do j = fzn-5,fzn-1
-                        rho(j) = rho(fzn)
+                        rho(j) = ycortex(i,j,k)%densty
                         rhoe(j) =  rho(j)/1836.110
-                        tem_s(1) = scr(i+ini,fzn+jni,k+kni)
-                        tem_s(1) =  tem_s(1) *kb/m_0/c**2
+                        tem_s(1) = ycortex(i,j,k)%tem
                         ze = me / tem_s(1)
                         zp = mp / tem_s(1)
                         meff1(1) = (1.0-1./1836.110)/mp + 1./1836.110/me
@@ -756,10 +724,9 @@
 
                   if (mpi_coords(2) == mpi_dims(2)-1) then
                      do j = nzn+1,nzn+5 
-                        rho(j) = rho(nzn)
+                        rho(j) = ycortex(i,j-nzn,k)%densty
                         rhoe(j) =  rho(j)/1836.110
-                        tem_s(1) = scr(i+ini,nzn+jni,k+kni) 
-                        tem_s(1) =  tem_s(1) *kb/m_0/c**2
+                        tem_s(1) = ycortex(i,j-nzn,k)%tem
                         ze = me / tem_s(1)
                         zp = mp / tem_s(1)
                         meff1(1) = (1.0-1./1836.110)/mp + 1./1836.110/me
@@ -768,8 +735,8 @@
                      enddo
                   else
                      do j = nzn+1,nzn+5
-                           rho(j) = physic(i,j,k)%densty
-                           tem_s(1) = scr(i+ini,j+jni,k+kni)*kb/m_0/c**2
+                           rho(j) = scr_dens(i+ini,j+jni,k+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 
+                           tem_s(1) = scr_temp(i+ini,j+jni,k+kni)*kb/m_0/c**2
                            rhoe(j) =  rho(j)/1836.110
                            ze = me / tem_s(1)
                            zp = mp / tem_s(1)
@@ -782,7 +749,6 @@
                else
 
                   do j = fzn-5,nzn+5
-         
                      radi  = sqrt(xzn(i)**2+(x(j)+shift)**2+zzn(k)**2)
                      rho(j) = 1./(1.+(radi/psh1)**nn)**(mm1/nn)      & 
                         + fg*1./(1.+(radi/psh2)**nn)**(mm2/nn)
@@ -805,7 +771,6 @@
             ELSE
                if (ipr == 1) then
                   do j= fzn, nzn 
-                     ! p(j)    = pb/dk/(1.0+(x(j)/psh)**nn)**(mm/nn)
                      p(j)     = pb/dk1/(1.+x(j))**mm1
                      rho(j)  = p(j)/(pb/dk1)*1.0
                      rhoe(j) = rho(j)/1836.11
@@ -818,7 +783,6 @@
                   enddo
 
                   do j= nzn+1, nzn+5
-                     ! p(j)    = pb/dk/(1.0+(x(j)/psh)**nn)**(mm/nn)
                      p(j)     = pb/dk1/(1.+x(j))**mm1
                      rho(j)  = p(j)/(pb/dk1)*1.0
                      rhoe(j) = rho(j)/1836.11
@@ -962,7 +926,7 @@
 
                  if (basenm(3:3) == 'C') then
                      rho(j) = physic(i,k,j)%densty
-                     tem_s(1) = scr(i+ini,k+jni,j+kni)
+                     tem_s(1) = scr_temp(i+ini,k+jni,j+kni)
                      tem_s(1) =  tem_s(1) *kb/m_0/c**2
                      rhoe(j) =  rho(j)/1836.110
                      
@@ -995,15 +959,14 @@
                if (mpi_coords(3) /= 0) then
                   do j= fzn-1, fzn-5, -1
                   ! GHANGES BY 3D PARALLELIZATION: copy Z boundaries  
-
                      dx(j)   = boundPosZ(j)%dx
                      xl(j)   = boundPosZ(j)%zznl
                      xr(j)   = boundPosZ(j)%zznr
                      x(j)    = boundPosZ(j)%zzn
 
                      if (basenm(3:3) == 'C') then
-                        rho(j) = physic(i,k,j)%densty
-                        tem_s(1) = scr(i+ini,k+jni,j+kni)*kb/m_0/c**2
+                        rho(j) = scr_dens(i+ini,k+jni,j+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 
+                        tem_s(1) = scr_temp(i+ini,k+jni,j+kni)*kb/m_0/c**2
                         rhoe(j) =  rho(j)/1836.110
                      else
                         radi  = sqrt(xzn(i)**2+(yzn(k)+shift)**2+x(j)**2)
@@ -1035,11 +998,10 @@
                      xr(j)   = xr(j+1)-dx(j+1)
                      x(j)    = 0.5*(xl(j)+xr(j))
  
-                     if (basenm(3:3) == 'C') then         
-                        rho(j)  = rho(fzn)
-                        rhoe(j) =  rho(j)/1836.110         
-                        tem_s(1) = scr(i+ini,k+jni,fzn+kni)
-                        tem_s(1) =  tem_s(1) *kb/m_0/c**2
+                     if (basenm(3:3) == 'C') then 
+                        rho(j) = zcortex(i,k,j)%densty
+                        rhoe(j) =  rho(j)/1836.110
+                        tem_s(1) = zcortex(i,k,j)%tem
                      else
                         radi  = sqrt(xzn(i)**2+(yzn(k)+shift)**2+x(j)**2)
                         rho(j) = 1./(1.+(radi/psh1)**nn)**(mm1/nn)      & 
@@ -1074,8 +1036,8 @@
                      x(j)    = boundPosZ(j-nzn)%zzn
 
                      if (basenm(3:3) == 'C') then
-                        rho(j) = physic(i,k,j)%densty
-                        tem_s(1) = scr(i+ini,k+jni,j+kni)*kb/m_0/c**2
+                        rho(j) = scr_dens(i+ini,k+jni,j+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 
+                        tem_s(1) = scr_temp(i+ini,k+jni,j+kni)*kb/m_0/c**2
                         rhoe(j) =  rho(j)/1836.110
                      else
                         radi  = sqrt(xzn(i)**2+(yzn(k)+shift)**2+x(j)**2)
@@ -1110,11 +1072,10 @@
                      xr(j)   = xr(j-1) + dx(j)
                      x(j)    = 0.5*(xl(j)+xr(j))
 
-                     if (basenm(3:3) == 'C') then                                                 
-                        rho(j)  = rho(nzn)
-                        rhoe(j) =  rho(j)/1836.110              
-                        tem_s(1) = scr(i+ini,k+jni,nzn+kni) 
-                        tem_s(1) = tem_s(1) *kb/m_0/c**2
+                     if (basenm(3:3) == 'C') then 
+                        rho(j) = zcortex(i,k,j-nzn)%densty
+                        rhoe(j) =  rho(j)/1836.110
+                        tem_s(1) = zcortex(i,k,j-nzn)%tem
                             
                      else
                         radi  = sqrt(xzn(i)**2+(yzn(k)+shift)**2+x(j)**2)
@@ -1239,14 +1200,13 @@
 !$OMP END DO
       ENDIF
 
-!$OMP END PARALLEL 
-
-      deallocate (scr)
+!$OMP END PARALLEL
 
       if (cartrank == 0) then
          print*,'-------------------------- GRAV -------------------------------'
-         print*,mpi_coords(1), mpi_coords(2),mpi_coords(3),physic(nx/2,1,nz/2)%gravx,physic(nx/2,1,nz/2)%gravy,physic(nx/2,1,nz/2)%gravz
-         print*,mpi_coords(1), mpi_coords(2),mpi_coords(3),physic(nx/2,ny,nz/2)%gravx,physic(nx/2,ny,nz/2)%gravy,physic(nx/2,ny,nz/2)%gravz
+         print*,mpi_coords(1), mpi_coords(2),mpi_coords(3)
+         print*,physic(nx/2,1,nz/2)%gravx,physic(nx/2,1,nz/2)%gravy,physic(nx/2,1,nz/2)%gravz
+         print*,physic(nx/2,ny,nz/2)%gravx,physic(nx/2,ny,nz/2)%gravy,physic(nx/2,ny,nz/2)%gravz
          print*,'---------------------------------------------------------------'
       endif
       

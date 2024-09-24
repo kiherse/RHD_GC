@@ -552,29 +552,29 @@
 
       if (cartrank == 0) then
 
-        tema= physic(nx/4,1,nz/4)%pres/ (physic(nx/4,1,nz/4)%denstye/me &
-              + (physic(nx/4,1,nz/4)%densty-physic(nx/4,1,nz/4)%denstye)/mp )
-        etars = (rhob*hb/h_s(1))/(1-velb**2)
-        print *, '---------- INIT: beam and medium parameters ----------'
-        print *, '  vb [c]        = ', velb
-        print *, '  Mb            = ', velb/sqrt(csb2)
-        print *, '  Tb [K]        = ', temb*m_0*c**2/kb
-        print *, '  Tm [K]        = ', tema*m_0*c**2/kb
-        print *, '  rhob [g*cm-3] = ', rhob*rho_0a
-        print *, '  rho_0a [g*cm-3] = ', rho_0a
-        print *, '  rhom [g*cm-3] = ', physic(nx/4,1,nz/4)%densty
-        print *, '  eta           = ', rhob
-        print *, '  Xeb           = ', rhoeb/rhob
-        print *, '  epsb [c2]     = ', epsb
-        print *, '  epsm [c2]     = ', physic(nx/4,1,nz/4)%eps 
-        print *, '  pb [c2]       = ', pb
-        print *, '  pm [c2]       = ', physic(nx/4,1,nz/4)%pres
-        print *, '  pb/pm         = ', pb/physic(nx/4,1,nz/4)%pres
-        print *, '  gamb          = ', gamb
-        print *, '  gamm          = ', gam_s(1)
-        print *, '  vjet1d [c]    = ', velb*sqrt(etars)/    &
+         tema= physic(nx/2,1,nz/2)%pres/ (physic(nx/2,1,nz/2)%denstye/me &
+         + (physic(nx/2,1,nz/2)%densty-physic(nx/2,1,nz/2)%denstye)/mp )
+         etars = (rhob*hb/h_s(1))/(1-velb**2)
+         print *, '---------- INIT: beam and medium parameters ----------'
+         print *, '  vb [c]        = ', velb
+         print *, '  Mb            = ', velb/sqrt(csb2)
+         print *, '  Tb [K]        = ', temb*m_0*c**2/kb
+         print *, '  Tm [K]        = ', tema*m_0*c**2/kb
+         print *, '  rhob [g*cm-3] = ', rhob*rho_0a
+         print *, '  rhom [g*cm-3] = ', physic(nx/2,1,nz/2)%densty*rho_0a
+         print *, '  rho_0a [g*cm-3] = ', rho_0a
+         print *, '  eta           = ', rhob
+         print *, '  Xeb           = ', rhoeb/rhob
+         print *, '  epsb [c2]     = ', epsb
+         print *, '  epsm [c2]     = ', physic(nx/2,1,nz/2)%eps 
+         print *, '  pb [c2]       = ', pb
+         print *, '  pm [c2]       = ', physic(nx/2,1,nz/2)%pres
+         print *, '  pb/pm         = ', pb/physic(nx/2,1,nz/2)%pres
+         print *, '  gamb          = ', gamb
+         print *, '  gamm          = ', gam_s(1)
+         print *, '  vjet1d [c]    = ', velb*sqrt(etars)/    &
                   (1.0+sqrt(etars))
-        print *, '----------------------------------------------------'
+         print *, '----------------------------------------------------'
       endif
    ENDIF
 

@@ -97,9 +97,8 @@
 !--------------------------------------------------------------------------BEGIN
       txtxt = '.....'
 
-      write(6,*) '---------------- MAIN (show parametes) ------------------', &
-      'Parameters reset to their values in ', rstfil
       write(6,*) ' '
+      write(6,*) '---------------- MAIN (showParameters) ------------------'
       write(6,*) 'gamma   ', txtxt, gamma_ad
       write(6,*) 'velb    ', txtxt, velb
       write(6,*) 'rhob    ', txtxt, rhob
@@ -120,5 +119,6 @@
       write(6,*) 'itdelay ', txtxt, itdelay
       write(6,*) 'suffixd ', txtxt, suffixd
       write(6,*) '--------------------------------------------------------'
+      write(6,*) ' '
 !----------------------------------------------------------------------------END
       END subroutine showParameters
