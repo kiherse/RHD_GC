@@ -328,15 +328,6 @@ subroutine hydrow3( tid, fznp, nznp, igodu, small, smlrho, epsiln, &
     xer(i)   = rhoer(i)/rhor(i)
     temr(i)  = pr(i) / (rhor(i)*( xer(i)/me + (1.0-xer(i))/mp ))
 
-    ! if (xyswp==1 .and. mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-    ! i == 324 .and. j == 217 .and. k == 217) then
-    !     print*,'------------------------------ Hydro x: before Synge -----------------------------'
-    !     print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell ',i,j,k
-    !     print*,'me, mp, rhol, xel, teml, ul: ',me, mp, rhol(i), xel(i), teml(i), ul(i)
-    !     print*,'pl, gaml, hl, csl, dpdrhl, dpdu: ',pl(i), gaml(i), hl(i), csl(i), dpdrhl(i), dpdur(i)                                     
-    !     print*,'-----------------------------------------------------------------------------------------'
-    ! endif
-
   enddo
 
   call eos_synge( 1, tid, fznp, nznp+1, me, mp, rhol, xel, teml, ul,   &
@@ -361,17 +352,6 @@ subroutine hydrow3( tid, fznp, nznp, igodu, small, smlrho, epsiln, &
     er(i)    = tt4 - rr(i) - pr(i)
     fr(i)    = fm(i)
 
-    ! if (xyswp==1 .and. mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-    ! i == 324 .and. j == 217 .and. k == 217) then
-    !     print*,'------------------------------ Hydro x sweep: Riemann parameters -----------------------------'
-    !     print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell ',i,j,k
-    !     print*,'vell, velr, veltl, veltr, velttl, velttr, wl, wr: ', vell(i), velr(i), veltl(i), veltr(i), velttl(i), velttr(i), wl(i), wr(i) 
-    !     print*,'csl, csr, pl, pr, hl, hr, dpdrhl, dpdrhr, dpdul: ',csl(i), csr(i), pl(i), pr(i), hl(i), hr(i), dpdrhl(i), dpdrhr(i), dpdul(i)
-    !     print*,'dpdur, rl, rr, ml, mr, mtl, mtr: ',dpdur(i), rl(i), rr(i), ml(i), mr(i), mtl(i), mtr(i)
-    !     print*,'mttl, mttr, el, er: ',mttl(i), mttr(i), el(i), er(i)                                       
-    !     print*,'-----------------------------------------------------------------------------------------'
-    ! endif
-
   enddo
 
   ! Approximate Riemann solver
@@ -383,16 +363,6 @@ subroutine hydrow3( tid, fznp, nznp, igodu, small, smlrho, epsiln, &
                  rflx, mflx, mtflx, mttflx, eflx )
 
   do i=fznp,nznp+1
-  
-    ! if (xyswp==1 .and. mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-    ! i == 324 .and. j == 217 .and. k == 217) then
-    !   print*,'---------- Hydro: after Riemann ------------'
-    !   print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell ',i,j,k
-    !   print*,'Fluxes i+1 and i: ',mflx(i+1),mflx(i) 
-    !   print*,'dx(i): ',dx(i)                                            
-    !   print*,'----------------------------------------------------------'
-    !   stop
-    ! endif
 
     if (rflx(i) > 0.0) then  
       reflx(i) = rhoel(i)*wl(i)*rflx(i)/rl(i)

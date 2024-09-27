@@ -345,7 +345,7 @@
                      dx(j)   = boundPosX(j)%dx
 
                      if (basenm(3:3) == 'C') then
-                        rho(j) = scr_dens(j+ini,i+jni,k+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20
+                        rho(j) = scr_dens(j+ini,i+jni,k+kni)
                         tem_s(1) = scr_temp(j+ini,i+jni,k+kni)*kb/m_0/c**2
                         rhoe(j) =  rho(j)/1836.110
                                  
@@ -384,7 +384,7 @@
                      dx(j)   = boundPosX(j-nzn)%dx
 
                      if (basenm(3:3) == 'C') then
-                        rho(j) = scr_dens(j+ini,i+jni,k+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 
+                        rho(j) = scr_dens(j+ini,i+jni,k+kni) 
                         tem_s(1) = scr_temp(j+ini,i+jni,k+kni)*kb/m_0/c**2
                         rhoe(j) =  rho(j)/1836.110
                                        
@@ -700,7 +700,7 @@
                         
                   if (mpi_coords(2) /= 0) then  
                      do j = fzn-5,fzn-1
-                        rho(j) = scr_dens(i+ini,j+jni,k+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 
+                        rho(j) = scr_dens(i+ini,j+jni,k+kni) 
                         tem_s(1) = scr_temp(i+ini,j+jni,k+kni)*kb/m_0/c**2
                         rhoe(j) =  rho(j)/1836.110
                         ze = me / tem_s(1)
@@ -735,7 +735,7 @@
                      enddo
                   else
                      do j = nzn+1,nzn+5
-                           rho(j) = scr_dens(i+ini,j+jni,k+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 
+                           rho(j) = scr_dens(i+ini,j+jni,k+kni)
                            tem_s(1) = scr_temp(i+ini,j+jni,k+kni)*kb/m_0/c**2
                            rhoe(j) =  rho(j)/1836.110
                            ze = me / tem_s(1)
@@ -926,8 +926,7 @@
 
                  if (basenm(3:3) == 'C') then
                      rho(j) = physic(i,k,j)%densty
-                     tem_s(1) = scr_temp(i+ini,k+jni,j+kni)
-                     tem_s(1) =  tem_s(1) *kb/m_0/c**2
+                     tem_s(1) = scr_temp(i+ini,k+jni,j+kni)*kb/m_0/c**2
                      rhoe(j) =  rho(j)/1836.110
                      
                   else
@@ -965,7 +964,7 @@
                      x(j)    = boundPosZ(j)%zzn
 
                      if (basenm(3:3) == 'C') then
-                        rho(j) = scr_dens(i+ini,k+jni,j+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 
+                        rho(j) = scr_dens(i+ini,k+jni,j+kni)
                         tem_s(1) = scr_temp(i+ini,k+jni,j+kni)*kb/m_0/c**2
                         rhoe(j) =  rho(j)/1836.110
                      else
@@ -1036,7 +1035,7 @@
                      x(j)    = boundPosZ(j-nzn)%zzn
 
                      if (basenm(3:3) == 'C') then
-                        rho(j) = scr_dens(i+ini,k+jni,j+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 
+                        rho(j) = scr_dens(i+ini,k+jni,j+kni)
                         tem_s(1) = scr_temp(i+ini,k+jni,j+kni)*kb/m_0/c**2
                         rhoe(j) =  rho(j)/1836.110
                      else

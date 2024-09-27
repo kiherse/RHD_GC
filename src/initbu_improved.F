@@ -452,7 +452,7 @@
          do kk=1,nz
             do jj=1,ny
                do ii=1,nx
-                  physic(ii,jj,kk)%densty = scr_dens(ii+ini,jj+jni,kk+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
+                  physic(ii,jj,kk)%densty = scr_dens(ii+ini,jj+jni,kk+kni)
                enddo
             enddo
          enddo

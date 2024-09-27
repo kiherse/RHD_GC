@@ -72,7 +72,7 @@
       mnz1, mnz5, mnz6, &
       mn1,  mn5,  mn6
 
-      integer(is):: ierr, i, j, k,                    &
+      integer(is):: ierr, i, j, k, w, y, z,           &
       xyswp, nbegin, iwrtd, rkin,                     &
       igeomx, igeomy, igeomz,                         &
       bndmnx, bndmxx, bndmny, bndmxy, bndmnz, bndmxz, &
@@ -98,7 +98,7 @@
       q0, mloss0, fg, rm, tem0, tem1, epsb, hb, lofb,  &
       lk, me, mp
       
-      real(rs)   :: pc, me_cgs, c, mp_cgs, R_b, rho_0a, m_0, kb, meff, &
+      real(rs)   :: pc, me_cgs, c, mp_cgs, R_b, rho_0a, m_0, kb, meff, meff_cgs, &
       KB1, KB2
       
       real(rs)   :: A0, pha(25), frs(25), fra(25)
@@ -136,7 +136,7 @@
       character(256)::fich, fich2
       integer(is):: ini, ifi, jni, jfi, kni, kfi, deltax, deltay
 
-      real(4), allocatable :: scr_dens(:,:,:), scr_temp(:,:,:)
+      real(4), allocatable :: scr_pres(:,:,:), scr_dens(:,:,:), scr_temp(:,:,:)
       type(Tbounds), allocatable :: xcortex(:,:,:), ycortex(:,:,:), zcortex(:,:,:)
       
 !--------------------------------------------------------------------------BEGIN
@@ -170,7 +170,6 @@
       KB1 = 7.5e20
       KB2 = 4.4e-10
       kb= 1.38066e-16
-      meff= 1.0/9.1095e-28 * 2.0/1836.11
 
       !  Read initial parameters
       call input(  suffix, suffixd,                & 
@@ -222,24 +221,25 @@
 
       !--------------------------------------------------- J3C*: reading ICM cubes
 
+      allocate (scr_pres(2048,2048,2048), stat= ierr)
       allocate (scr_dens(2048,2048,2048), stat= ierr)
       allocate (scr_temp(2048,2048,2048), stat= ierr)
 
       if (basenm(4:4) == '0') then   
-         fich= '/storage/scratch/lv72/lv72805/D02/2048_256kpc/dens_D02_091'
+         fich= '/storage/scratch/lv72/lv72805/D02/2048_256kpc/pres_D02_091'
       elseif (basenm(4:4) == '3') then
-         fich= '/storage/scratch/lv72/lv72805/D03/2048_256kpc/dens_D03_091'
+         fich= '/storage/scratch/lv72/lv72805/D03/2048_256kpc/pres_D03_091'
       elseif (basenm(4:4) == '6') then
-         fich= '/storage/scratch/lv72/lv72805/D06/2048_256kpc/dens_D06_091'
+         fich= '/storage/scratch/lv72/lv72805/D06/2048_256kpc/pres_D06_091'
       elseif (basenm(4:4) == '1') then
-         fich= '/storage/scratch/lv72/lv72805/D10/2048_256kpc/dens_D10_091'
+         fich= '/storage/scratch/lv72/lv72805/D10/2048_256kpc/pres_D10_091'
       endif
 
       open( 1, file=fich, form='unformatted', status='old', iostat=ierr )
       if (ierr/=0) then
         call ERROR( 'File reading: Error openning ', fich, __FILE__, __LINE__ )
       endif
-      read(1) (((scr_dens(i,j,k), i=1,2048), j=1,2048), k=1,2048)
+      read(1) (((scr_pres(i,j,k), i=1,2048), j=1,2048), k=1,2048)
       close(1)
 
       if (basenm(4:4) == '0') then
@@ -256,8 +256,28 @@
       if (ierr/=0) then
         call ERROR( 'File reading: Error openning ', fich2, __FILE__, __LINE__ )                                                      
       endif
-      read(2) (((scr_temp(i,j,k), i=1,2048), j=1,2048), k=1,2048)
+      read(2) (((scr_temp(i,j,k), i=1,2048), j=1,2048), k=1,2048) ! K units
       close(2)
+
+      meff_cgs = (1.0-1./1836.110)/mp_cgs + 1./1836.110/me_cgs
+
+      scr_dens = scr_pres/(meff_cgs*rho_0a)
+      scr_dens = scr_dens/(kb*scr_temp) !code units
+
+      deallocate (scr_pres)
+
+      ! do w = 1, 2048
+      !    do y = 1, 2048
+      !       do z = 1, 2048
+      !          print*,scr_dens(w,y,z),scr_temp(w,y,z)
+      !          if (w==10 .or. y==10 .or. z==10) then
+      !             STOP
+      !          endif
+      !       enddo
+      !    enddo
+      ! enddo
+
+      ! stop
       
       !------------------------------------------------------------------------------
 
@@ -343,8 +363,8 @@
          do kk=1,nz
             do jj=1,ny
                   do ii=-4,5
-                     xcortex(ii,jj,kk)%densty = scr_dens(ii+ini,jj+jni,kk+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
-                     xcortex(ii,jj,kk)%tem = scr_temp(ii+ini,jj+jni,kk+kni)*kb/m_0/c**2
+                     xcortex(ii,jj,kk)%densty = scr_dens(ii+ini,jj+jni,kk+kni)
+                     xcortex(ii,jj,kk)%tem = scr_temp(ii+ini,jj+jni,kk+kni)*kb/(m_0*c**2)
                   enddo
             enddo
          enddo
@@ -354,8 +374,8 @@
          do kk=1,nz
             do ii=1,nx
                   do jj=-4,5
-                     ycortex(ii,jj,kk)%densty = scr_dens(ii+ini,jj+jni,kk+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
-                     ycortex(ii,jj,kk)%tem = scr_temp(ii+ini,jj+jni,kk+kni)*kb/m_0/c**2
+                     ycortex(ii,jj,kk)%densty = scr_dens(ii+ini,jj+jni,kk+kni)
+                     ycortex(ii,jj,kk)%tem = scr_temp(ii+ini,jj+jni,kk+kni)*kb/(m_0*c**2)
                   enddo
             enddo
          enddo
@@ -365,8 +385,8 @@
          do ii=1,nx
             do jj=1,ny
                   do kk=-4,5
-                     zcortex(ii,jj,kk)%densty = scr_dens(ii+ini,jj+jni,kk+kni)*1.9887/0.72/(3.086)**3/rho_0a*1.e-20 !10^10 M_sun/h/(Kpc/h)^3
-                     zcortex(ii,jj,kk)%tem = scr_temp(ii+ini,jj+jni,kk+kni)*kb/m_0/c**2
+                     zcortex(ii,jj,kk)%densty = scr_dens(ii+ini,jj+jni,kk+kni)
+                     zcortex(ii,jj,kk)%tem = scr_temp(ii+ini,jj+jni,kk+kni)*kb/(m_0*c**2)
                   enddo
             enddo
          enddo
@@ -662,20 +682,7 @@
             print*,''
          endif
       ENDIF
-
-      if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1) then
-         print*,'------------ MAIN: before main loop ---------------'
-         print*,'Time step: ',nstep
-         print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell 324 217 217'                                                        
-         print*,'Density and conserved density: ',physic(324,217,217)%densty,physic(324,217,217)%denstw
-         print*,'Pressure: ',physic(324,217,217)%pres
-         print*,'Internal energy: ',physic(324,217,217)%eps
-         print*,'Velocity: ',physic(324,217,217)%velx,physic(324,217,217)%vely,physic(324,217,217)%velz
-         print*,'Energy: ',physic(324,217,217)%energy
-         print*,'Moment: ',physic(324,217,217)%momenx,physic(324,217,217)%momeny,physic(324,217,217)%momenz
-         print*,'----------------------------------------------------'
-      endif
-
+      
       deallocate (scr_dens, scr_temp)
 
 !-------------------------------------------------------------- TIME EVOLUTION
@@ -753,20 +760,6 @@
             DO rkin= 1, irk
 
                call intercambiaBoundPhysic( physic, nx, ny, nz, mnx5, mny5, mnz5, bndmny, bndmxy  )
-
-               if (mod(nstep,50) == 0  .and. rkin==1 .and. mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1) then
-                  print*,'------------- MAIN: before sweeps ----------------'
-                  print*,'Time step:', nstep
-                  print*,'Rkin:', rkin
-                  print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell 324 217 217'                                                        
-                  print*,'Density and conserved density: ',physic(324,217,217)%densty,physic(324,217,217)%denstw
-                  print*,'Pressure: ',physic(324,217,217)%pres
-                  print*,'Internal energy: ',physic(324,217,217)%eps
-                  print*,'Velocity: ',physic(324,217,217)%velx,physic(324,217,217)%vely,physic(324,217,217)%velz
-                  print*,'Energy and conserved energy: ',physic(324,217,217)%energy
-                  print*,'Moment: ',physic(324,217,217)%momenx,physic(324,217,217)%momeny,physic(324,217,217)%momenz
-                  print*,'----------------------------------------------------'
-               endif
                
                call sweeps(basenm, rkin, igodu, igeomx, igeomy, igeomz,            &
                bndmnx, bndmxx, bndmny, bndmxy, bndmnz, bndmxz,       &
@@ -783,48 +776,11 @@
                boundPosX, boundPosY, boundPosZ, grav, physic, curth, &
                xcortex, ycortex, zcortex )
 
-               if (mod(nstep,50) == 0  .and. rkin==1 .and. mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1) then
-                  ! print*,'------- MAIN: after sweeps, old parameters --------'
-                  ! print*,'Time step: ',nstep
-                  ! print*,'Rkin:', rkin
-                  ! print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell 324 217 217'                                                        
-                  ! print*,'Conserved density: ',physic(324,217,217)%odenstw                                                        
-                  ! print*,'Leptonic conserved density: ',physic(324,217,217)%odenstew
-                  ! print*,'Pressure: ',physic(324,217,217)%opres
-                  ! print*,'Energy and conserved energy: ',physic(324,217,217)%oenergy
-                  ! print*,'Moment: ',physic(324,217,217)%omomenx,physic(324,217,217)%omomeny,physic(324,217,217)%omomenz
-                  print*,'---------- MAIN: after sweeps, new ones ------------'
-                  print*,'Time step: ',nstep
-                  print*,'Rkin:', rkin
-                  print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell 324 217 217'                                                        
-                  print*,'Density and conserved density: ',physic(324,217,217)%densty,physic(324,217,217)%denstw
-                  print*,'Pressure: ',physic(324,217,217)%pres
-                  print*,'Internal energy: ',physic(324,217,217)%eps
-                  print*,'Velocity: ',physic(324,217,217)%velx,physic(324,217,217)%vely,physic(324,217,217)%velz
-                  print*,'Energy and conserved energy: ',physic(324,217,217)%energy
-                  print*,'Moment: ',physic(324,217,217)%momenx,physic(324,217,217)%momeny,physic(324,217,217)%momenz
-                  print*,'----------------------------------------------------'
-               endif
-
                ! Newton-Raphson for recovering the physical variables
                call getprfq3d( basenm, nx, ny, nz, mnx1, mnx5, mny5, mnz1, mnz5,     &
                         small, smallp, vwi, vk, timej,            &
 			                vwp, rhowp, uwp, yc, me, mp,             &
 			               rkin, xzn, yzn, zzn, physic )
-
-               ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1) then
-               !    print*,'------------- MAIN: after getprfq3d ----------------'
-               !    print*,'Time step: ',nstep
-               !    print*,'Rkin:', rkin
-               !    print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell 324 217 217'                                                        
-               !    print*,'Density and conserved density: ',physic(324,217,217)%densty,physic(324,217,217)%denstw
-               !    print*,'Pressure: ',physic(324,217,217)%pres
-               !    print*,'Internal energy: ',physic(324,217,217)%eps
-               !    print*,'Velocity: ',physic(324,217,217)%velx,physic(324,217,217)%vely,physic(324,217,217)%velz
-               !    print*,'Energy and conserved energy: ',physic(324,217,217)%energy
-               !    print*,'Moment: ',physic(324,217,217)%momenx,physic(324,217,217)%momeny,physic(324,217,217)%momenz
-               !    print*,'----------------------------------------------------'
-               ! endif
 
             ENDDO
 

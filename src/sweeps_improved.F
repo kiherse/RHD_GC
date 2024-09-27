@@ -296,28 +296,6 @@
                + b*physic(i,j,k)%denstew   &
                - c*(reflx(i+1)-reflx(i))*aux
 
-               ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-               ! i == 324 .and. j == 217 .and. k == 217) then
-               !    print*,'---------- Sweeps x: before addition of hydro ------------'
-               !    print*,'Rkin: ',rkin
-               !    print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell ',i,j,k
-               !    print*,'Old and saved moment x: ',physic(i,j,k)%omomenx,physic(i,j,k)%momenx
-               !    print*,'Old term (a): ',a*physic(i,j,k)%omomenx
-               !    print*,'Added term (b): ',b*physic(i,j,k)%momenx
-               !    print*,'Momentum difference (gravx): ',(mflx(i+1)-mflx(i))/dvol(i)
-               !    print*,'dvol(i): ',dvol(i)
-               !    print*,'dt: ',dt
-               !    print*,'Momentum flux term: ',- c*(mflx(i+1)-mflx(i))*aux
-               !    print*,'Old and saved moment y: ',physic(i,j,k)%omomeny,physic(i,j,k)%momeny
-               !    print*,'Old term (a): ',a*physic(i,j,k)%omomeny
-               !    print*,'Added term (b): ',b*physic(i,j,k)%momeny
-               !    print*,'Momentum flux term: ',- c*(mtflx(i+1)-mtflx(i))*aux
-               !    print*,'Old and saved moment z: ',physic(i,j,k)%omomenz,physic(i,j,k)%momenz 
-               !    print*,'Old term (a): ',a*physic(i,j,k)%omomenz
-               !    print*,'Added term (b): ',b*physic(i,j,k)%momenz  
-               !    print*,'Momentum flux term: ',- c*(mttflx(i+1)-mttflx(i))*aux
-               ! endif
-
                physic(i,j,k)%momenx = a*physic(i,j,k)%omomenx  &
                + b*physic(i,j,k)%momenx   &
                - c*(mflx(i+1)-mflx(i))*aux
@@ -330,56 +308,18 @@
                + b*physic(i,j,k)%momenz       &
                - c*(mttflx(i+1)-mttflx(i))*aux
 
-               ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-               ! i == 324 .and. j == 217 .and. k == 217) then
-               !    print*,'---------- Sweeps x: after addition of hydro ------------'
-               !    print*,'New moment x: ',physic(i,j,k)%momenx
-               !    print*,'New moment y: ',physic(i,j,k)%momeny
-               !    print*,'New moment z: ',physic(i,j,k)%momenz                                              
-               !    print*,'----------------------------------------------------------'
-               ! endif
-
-               ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-               ! i == 324 .and. j == 217 .and. k == 217) then
-               !    print*,'Old energy: ',physic(i,j,k)%energy 
-               !    print*,'Added term (b): ',b*physic(i,j,k)%energy  
-               !    print*,'Energy flux term: ',- c*(eflx(j+1)-eflx(j))*aux                        
-               ! endif
-
                physic(i,j,k)%energy = a*physic(i,j,k)%oenergy  &
                + b*physic(i,j,k)%energy   &
                - c*(eflx(i+1)-eflx(i))*aux
-
-               ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-               ! i == 324 .and. j == 217 .and. k == 217) then
-               !    print*,'New energy: ',physic(i,j,k)%energy                                              
-               !    print*,'----------------------------------------------------------'
-               ! endif
 
             enddo
         
             do i= fznp, nznp
 
-               ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-               ! i == 324 .and. j == 217 .and. k == 217) then
-               !    print*,'---------- Sweeps x: after gravx compensation  ------------'
-               !    print*,'Rkin: ',rkin
-               !    print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell ',i,j,k
-               !    print*,'Moment x: ',physic(i,j,k)%momenx
-               ! endif
-
                physic(i,j,k)%momenx = physic(i,j,k)%momenx + c*dt*physic(i,j,k)%gravx
                physic(i,j,k)%energy = physic(i,j,k)%energy +   &
                                  c*dt*physic(i,j,k)%gravx*physic(i,j,k)%velx
-               
-               ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-               ! i == 324 .and. j == 217 .and. k == 217) then               
-               !    print*,'Gravity x term: ',c*dt*physic(i,j,k)%gravx            
-               !    print*,'Gravx: ',physic(i,j,k)%gravx                
-               !    print*,'dt: ',dt  
-               !    print*,'New moment x (grav compensated): ',physic(i,j,k)%momenx                           
-               !    print*,'------------------------------------------------------------'
-               ! endif
+
             enddo
 
          enddo
@@ -514,22 +454,6 @@
                   physic(i,j,k)%denstew = b*physic(i,j,k)%denstew       &
                   - c*(reflx(j+1)-reflx(j))*aux
 
-                  ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-                  ! i == 324 .and. j == 217 .and. k == 217) then
-                  !    print*,'---------- Sweeps y: before addition of hydro ------------'
-                  !    print*,'Rkin: ',rkin
-                  !    print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell ',i,j,k
-                  !    print*,'Moment x: ',physic(i,j,k)%momenx
-                  !    print*,'Added term (b): ',b*physic(i,j,k)%momenx
-                  !    print*,'Momentum flux term: ',- c*(mttflx(j+1)-mttflx(j))*aux
-                  !    print*,'Moment y: ',physic(i,j,k)%momeny
-                  !    print*,'Added term (b): ',b*physic(i,j,k)%momeny
-                  !    print*,'Momentum flux term: ',- c*(mflx(j+1)-mflx(j))*aux
-                  !    print*,'Moment z: ',physic(i,j,k)%momenz
-                  !    print*,'Added term (b): ',b*physic(i,j,k)%momenz 
-                  !    print*,'Momentum flux term: ',- c*(mtflx(j+1)-mtflx(j))*aux 
-                  ! endif
-
                   physic(i,j,k)%momenx = b*physic(i,j,k)%momenx       &
                   - c*(mttflx(j+1)-mttflx(j))*aux
                   physic(i,j,k)%momeny = b*physic(i,j,k)%momeny       &
@@ -537,54 +461,17 @@
                   physic(i,j,k)%momenz = b*physic(i,j,k)%momenz       &
                   - c*(mtflx(j+1)-mtflx(j))*aux
 
-                  ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-                  ! i == 324 .and. j == 217 .and. k == 217) then
-                  !    print*,'---------- Sweeps y: after addition of hydro ------------'
-                  !    print*,'New moment x: ',physic(i,j,k)%momenx
-                  !    print*,'New moment y: ',physic(i,j,k)%momeny
-                  !    print*,'New moment z: ',physic(i,j,k)%momenz                                               
-                  !    print*,'----------------------------------------------------------'
-                  ! endif
-
-                  ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-                  ! i == 324 .and. j == 217 .and. k == 217) then
-                  !    print*,'Old energy: ',physic(i,j,k)%energy 
-                  !    print*,'Added term (b): ',b*physic(i,j,k)%energy  
-                  !    print*,'Energy flux term: ',- c*(eflx(j+1)-eflx(j))*aux                        
-                  ! endif
-
                   physic(i,j,k)%energy = b*physic(i,j,k)%energy       &
                   - c*(eflx(j+1)-eflx(j))*aux
-
-                  ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-                  ! i == 324 .and. j == 217 .and. k == 217) then
-                  !    print*,'Energy: ',physic(i,j,k)%energy                                              
-                  !    print*,'----------------------------------------------------------'
-                  ! endif
 
                enddo
 
             if (basenm(1:1) == 'J'.and.basenm(2:2)=='3') then
                 do j= fznp, nznp
-                
-                  ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-                  ! i == 324 .and. j == 217 .and. k == 217) then
-                  !    print*,'---------- Sweeps y: after gravy compensation  ------------'
-                  !    print*,'Rkin: ',rkin
-                  !    print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell ',i,j,k
-                  !    print*,'Moment y: ',physic(i,j,k)%momeny
-                  ! endif
 
                   physic(i,j,k)%momeny = physic(i,j,k)%momeny + c*dt*physic(i,j,k)%gravy
                   physic(i,j,k)%energy = physic(i,j,k)%energy +   &
                                          c*dt*physic(i,j,k)%gravy*physic(i,j,k)%vely
-                     
-                  ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-                  ! i == 324 .and. j == 217 .and. k == 217) then               
-                  !    print*,'Gravity y: ',c*dt*physic(i,j,k)%gravy     
-                  !    print*,'Moment y: ',physic(i,j,k)%momeny                          
-                  !    print*,'------------------------------------------------------------'
-                  ! endif
 
                enddo
             else if (basenm(1:1) == 'J'.and.basenm(2:2)/='3') then
@@ -723,37 +610,12 @@
                   physic(i,j,k)%denstew = b*physic(i,j,k)%denstew         &
                   - c*(reflx(k+1)-reflx(k))*aux
 
-                  ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-                  ! i == 324 .and. j == 217 .and. k == 217) then
-                  !    print*,'---------- Sweeps z: before addition of hydro ------------'
-                  !    print*,'Rkin: ',rkin
-                  !    print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell ',i,j,k
-                  !    print*,'Moment x: ',physic(i,j,k)%momenx
-                  !    print*,'Added term (b): ',b*physic(i,j,k)%momenx
-                  !    print*,'Momentum flux term: ',- c*(mtflx(k+1)-mtflx(k))*aux
-                  !    print*,'Moment y: ',physic(i,j,k)%momeny
-                  !    print*,'Added term (b): ',b*physic(i,j,k)%momeny
-                  !    print*,'Momentum flux term: ',- c*(mttflx(k+1)-mttflx(k))*aux
-                  !    print*,'Moment z: ',physic(i,j,k)%momenz
-                  !    print*,'Added term (b): ',b*physic(i,j,k)%momenz 
-                  !    print*,'Momentum flux term: ',- c*(mflx(k+1)-mflx(k))*aux
-                  ! endif
-
                   physic(i,j,k)%momenx = b*physic(i,j,k)%momenx         &
                   - c*(mtflx(k+1)-mtflx(k))*aux
                   physic(i,j,k)%momeny = b*physic(i,j,k)%momeny         &
                   - c*(mttflx(k+1)-mttflx(k))*aux
                   physic(i,j,k)%momenz = b*physic(i,j,k)%momenz         &
                   - c*(mflx(k+1)-mflx(k))*aux
-
-                  ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. &
-                  ! i == 324 .and. j == 217 .and. k == 217) then
-                  !    print*,'---------- Sweeps z: after addition of hydro ------------'
-                  !    print*,'New moment x: ',physic(i,j,k)%momenx
-                  !    print*,'New moment y: ',physic(i,j,k)%momeny
-                  !    print*,'New moment z: ',physic(i,j,k)%momenz                                             
-                  !    print*,'----------------------------------------------------------'
-                  ! endif
 
                   physic(i,j,k)%energy = b*physic(i,j,k)%energy         &
                   - c*(eflx(k+1)-eflx(k))*aux

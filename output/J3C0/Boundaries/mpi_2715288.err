@@ -1,0 +1,248 @@
+src/input.F:92:26:
+
+   92 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:102:26:
+
+  102 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:112:26:
+
+  112 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:126:26:
+
+  126 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:141:26:
+
+  141 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:151:26:
+
+  151 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:161:26:
+
+  161 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:171:26:
+
+  171 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:181:26:
+
+  181 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:191:26:
+
+  191 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:201:26:
+
+  201 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:211:26:
+
+  211 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:221:26:
+
+  221 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:231:26:
+
+  231 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:241:26:
+
+  241 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:251:26:
+
+  251 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:261:26:
+
+  261 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:271:26:
+
+  271 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:282:26:
+
+  282 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:293:26:
+
+  293 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:303:26:
+
+  303 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:313:26:
+
+  313 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:323:26:
+
+  323 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:333:26:
+
+  333 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:343:26:
+
+  343 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:353:26:
+
+  353 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:363:26:
+
+  363 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:416:26:
+
+  416 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:434:26:
+
+  434 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:446:26:
+
+  446 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:465:26:
+
+  465 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:485:26:
+
+  485 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:514:26:
+
+  514 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:537:26:
+
+  537 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:549:26:
+
+  549 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:570:26:
+
+  570 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:609:26:
+
+  609 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:627:26:
+
+  627 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:652:26:
+
+  652 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:663:26:
+
+  663 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:685:26:
+
+  685 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:699:26:
+
+  699 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:717:26:
+
+  717 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:742:26:
+
+  742 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:752:26:
+
+  752 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:801:26:
+
+  801 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:864:26:
+
+  864 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:874:26:
+
+  874 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+src/input.F:885:26:
+
+  885 |          call inputerror( 'INPUT', label, label1, ierr )
+      |                          1
+Warning: Character length of actual argument shorter than of dummy argument ‘rutina’ (5/6) at (1)
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd: error: *** STEP 2715288.0 ON t020 CANCELLED AT 2024-09-13T12:53:03 DUE TO TIME LIMIT ***
+slurmstepd: error: *** JOB 2715288 ON t020 CANCELLED AT 2024-09-13T12:53:03 DUE TO TIME LIMIT ***

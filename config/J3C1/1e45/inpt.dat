@@ -1,0 +1,54 @@
+first line of the inpt file
+second    
+third                                                                
+basenm  ,J3C1
+rst_file, 0
+rst_rec , 0
+xd      , .5
+alpha   , 45.0
+nend    , 100000000
+tmax    , 100000000.
+suffix  ,AA
+suffixd ,AAA
+irstrt  , 0
+nrstrt  , 100000000
+trstrt  , 200.
+nout    , 1000000000
+tout    , 2500000000
+freqpl  , 4
+itstp   , 1
+cfl     , .4
+iapprs  , 4 
+irk     , 3
+igodu   , 0
+dtini   , 1.d-2
+niter   , -1
+small   , 1.d-15
+smlrho  , 1.d-15
+smallp  , 1.d-15
+smallu  , 1.d-15
+nsdim   , 3
+ixsym   , 0
+izsym   , 0
+iextrax , 0
+iextraz , 0
+gridlx  , 192.d0
+gridlx2 , 0.d0
+gridlz  , 192.d0
+gridlz2 , 0.d0
+gridly  , 128.d0
+nx      , 768
+nx2     , 0
+nxo     , 768
+ny      , 512
+nyold   , 512
+nz      , 768
+nz2     , 0
+nzo     , 768
+igeomx  , 0
+igeomy  , 0
+igeomz  , 0
+epsiln  , 1.0
+omg1    , .52
+omg2    , 10.0
+
