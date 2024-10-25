@@ -268,7 +268,7 @@
 
          dt = MIN( cfl/dtcc/SQRT(3.0), 1.05*olddt, dtc)
 
-         if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. mod(nstep,10) == 0) then
+         if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1 .and. mod(nstep,50) == 0) then
             write(6,*) '------------- TSTEP ----------------'
             write(6,*) '1.05*olddt,dtcc,dtc: ',1.05*olddt,cfl/dtcc/SQRT(3.0),dtc
             write(6,*) 'dt: ',dt

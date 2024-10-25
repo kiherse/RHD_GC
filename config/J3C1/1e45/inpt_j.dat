@@ -3,7 +3,7 @@ gamma, velb, rhob, machb, dk, psh, nn, mm
 are reset to their values in the restarting file   
 gamma   , 1.3333333333333
 velb    , 0.6
-rhob    , 3.4e-6
+rhob    , 6.2e-6
 rhoeb   , 3.1e-6
 temb    , 2.e10
 machb   , 18.2

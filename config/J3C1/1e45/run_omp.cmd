@@ -6,21 +6,20 @@
 #SBATCH --ntasks=$4
 #SBATCH --cpus-per-task=$5
 #SBATCH --tasks-per-node=$6
-#SBATCH --time=00:05:00
-#SBATCH --mem=70G
-#SBATCH --partition=genoa_s 
+#SBATCH --time=96:00:00
+#SBATCH --mem=100G
+#SBATCH --partition=genoa_s
 #SBATCH --qos=hera
 # #SBATCH --qos=thin_astro
-# #SBATCH --mail-type=ALL
-# #SBATCH --mail-user=kiara.hervella@uv.es
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=kiara.hervella@uv.es
 
-outRoot="/storage/scratch/lv72/lv72805/D02/J3C1/"
+outRoot="/storage/scratch/lv72/lv72805/D10/J3C1/1e45/"
 path_output="/home/lv72/lv72805/RHD_GC/output/J3C1/1e45/"
 path_wkd="/home/lv72/lv72805/RHD_GC/config/J3C1/1e45"
 
 # THIN QUEUE
 # module load hdf5/1.14.1-2_ompi_gcc13.2 hwloc/2.7.1
-
 # HERA QUEUE
 module load hdf5/1.14.1-2_gcc13.2_ompi_rhel8 
 

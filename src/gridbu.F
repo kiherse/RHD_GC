@@ -137,7 +137,7 @@
          bndmny = 4
          bndmxy = 4
 
-      else if (basenm(1:1)=='J'.and. basenm(3:3) == 'O') then
+      else if (basenm(1:1)=='J' .and. basenm(3:3) == 'O') then
          bndmnx = 2
          bndmxx = 2
          bndmnz = 2
@@ -172,7 +172,7 @@
          bndmxx = 2
          bndmnz = 2
          bndmxz = 2
-         bndmny = 5
+         bndmny = 9
          bndmxy = 7
 
       else if (basenm(1:1)=='M'.and. basenm(2:2) /= 'L') then

@@ -12,7 +12,7 @@ suffix  ,AA
 suffixd ,AAA
 irstrt  , 0
 nrstrt  , 100000000
-trstrt  , 100.
+trstrt  , 200.
 nout    , 1000000000
 tout    , 2500000000
 freqpl  , 4

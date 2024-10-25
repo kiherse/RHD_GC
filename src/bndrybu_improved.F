@@ -121,10 +121,7 @@
             do i= fznp-5, fznp-1
 
                ! Found position of the cells taken from the cosmological simulations
-               ! taking into account the displacement in reading: check initbu.F
-               ! would be better to just read the files once in initbu.F 
-               ! and store values in extra arrays for not saving the whole cubes
-               ! COPY the same in bndmax = 2
+               ! taking into account the displacement in reading
 
                xe = 1.0/1836.11
 
@@ -201,6 +198,7 @@
                   reboun= rptbd/rhob * rhoeb
                   pboun = pptbd
                endif
+               
                rho(i)  = rboun
                irho    = 1.0 /rho(i) 
                rhoe(i) = reboun
@@ -395,7 +393,7 @@
                irho    = 1.0 /rho(i)
                rhoe(i) = reboun
                rhopr(i)= rho(i) - rhoe(i)
-               vel(i)  = vboun                                                            
+               vel(i)  = vboun                                                           
 
                if (xzn(l) > 0. .and. zzn(j) > 0.) then
                   velt(i) = 0.1/sqrt(2.)*velb*sin(atan(zzn(j)/xzn(l)))   
@@ -411,9 +409,9 @@
                   veltt(i)= 0.1/sqrt(2.)*velb*cos(atan(abs(zzn(j)/xzn(l))))                                                   
                endif
 
-               p(i)    = p(fznp)
-               f(i)    = f(fznp)
-               dx(i)   = dx(fznp)                                                                                    
+               p(i)    = pboun
+               f(i)    = 1.0
+               dx(i)   = dx(fznp)                                                                                   
  
             else
 
@@ -426,7 +424,7 @@
                p(i)    = p(fznp)
                f(i)    = f(fznp)
                dx(i)   = dx(fznp)
-!               endif                                                                                                                      
+                                                                                                                      
             endif
          enddo
 
@@ -598,40 +596,17 @@
       ELSE IF (bndmax == 7) THEN
 !         gamm1 = 1.0 / (gamma_ad - 1.0)
          do i= 1, 5
-!            if ((f(nznp) >= 0.01) .OR. (vel(nznp) >= 0.0)) then
-               rho(nznp+i)  = rho(nznp)
-               rhoe(nznp+i) = rhoe(nznp)
-               rhopr(nznp+i)= rho(nznp) - rhoe(nznp)
+            rho(nznp+i)  = rho(nznp)
+            rhoe(nznp+i) = rhoe(nznp)
+            rhopr(nznp+i)= rho(nznp) - rhoe(nznp)
 !               vel(nznp+i)  = vel(nznp)
-               vel(nznp+i)  = 0.
-               velt(nznp+i) = velt(nznp)
-               veltt(nznp+i)= veltt(nznp)
-               p(nznp+i)    = p(nznp)
-               f(nznp+i)    = f(nznp)
-               dx(nznp+i)    = dx(nznp)
-!            else   
-!               if (ipr == 1) then
-!                  p(nznp+i)    = pb/dk1/(1.+yzn(nznp+i))**mm1
-!                  rho(nznp+i)  = p(nznp+i)/(pb/dk1)*1.0
-!                  rhoe(nznp+i) = rho(nznp+i)/1836.11 
-!                  rhopr(nznp+i)= rho(nznp+i) - rhoe(nznp+i)
-!                  vel(nznp+i)  = vel(nznp)
-!                  velt(nznp+i) = velt(nznp)
-!                  veltt(nznp+i)= veltt(nznp)
-!                  f(nznp+i)    = f(nznp)
-!                  dx(nznp+i)    = dx(nznp)
-!               else
-!                  p(nznp+i)    = pa(nznp+i)
-!                  rho(nznp+i)  = rhoa(nznp+i)
-!                  rhoe(nznp+i) = rho(nznp+i)/1836.11 
-!                  rhopr(nznp+i)= rho(nznp+i) - rhoe(nznp+i)
-!                  vel(nznp+i)  = vel(nznp)
-!                  velt(nznp+i) = velt(nznp)
-!                  veltt(nznp+i)= veltt(nznp)
-!                  f(nznp+i)    = f(nznp)   
-!                  dx(nznp+i)    = dx(nznp)
-!               endif
-!            endif
+            vel(nznp+i)  = 0.
+            velt(nznp+i) = velt(nznp)
+            veltt(nznp+i)= veltt(nznp)
+            p(nznp+i)    = p(nznp)
+            f(nznp+i)    = f(nznp)
+            dx(nznp+i)    = dx(nznp)
+
          enddo
 
 !Spherical SHOCK REFLECTION TEST 
