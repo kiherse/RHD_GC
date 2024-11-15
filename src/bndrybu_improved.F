@@ -143,8 +143,6 @@
                veltt(i)= 0.0
                dx(i) = dx(fznp)
 
-               ! print*, 'i:', i, 'rho(i):', rho(i), 'tem', tem_s, 'dx(i)', dx(i)
-               ! stop
             enddo
 
          ! Other basenm 
@@ -522,9 +520,6 @@
                veltt(i)= 0.0
                dx(i)   = dx(nznp)
 
-               ! print*, 'i-nznp:', i-nznp, 'rho(i):', rho(i), 'tem', tem_s, 'dx(i)', dx(i)
-               ! stop
-
             enddo
 
          ! Other basenm
@@ -594,20 +589,43 @@
 
 !OUTFLOW+EXHAUSTIVE BOUNDARY FOR JETS
       ELSE IF (bndmax == 7) THEN
-!         gamm1 = 1.0 / (gamma_ad - 1.0)
-         do i= 1, 5
-            rho(nznp+i)  = rho(nznp)
-            rhoe(nznp+i) = rhoe(nznp)
-            rhopr(nznp+i)= rho(nznp) - rhoe(nznp)
-!               vel(nznp+i)  = vel(nznp)
-            vel(nznp+i)  = 0.
-            velt(nznp+i) = velt(nznp)
-            veltt(nznp+i)= veltt(nznp)
-            p(nznp+i)    = p(nznp)
-            f(nznp+i)    = f(nznp)
-            dx(nznp+i)    = dx(nznp)
 
-         enddo
+         if  (basenm(3:3) == 'C') then
+
+            do i = nznp+1, nznp+5
+               rho(i) = cortex(i-nznp)%densty
+               tem_s = cortex(i-nznp)%tem
+               xe = 1.0/1836.11
+
+               rhoe(i)  = rho(i)*xe
+               rhopr(i) = rho(i) - rhoe(i)
+
+               ze = me / tem_s
+               zp = mp / tem_s
+               meff1 = (1.0-1./1836.110)/mp + 1./1836.110/me
+               dpdrho = tem_s*meff1
+
+               p(i) = rho(i)*dpdrho
+               f(i)    = 0.0 ! ambient medium tracer
+               vel(i)  = 0.0 ! ambient medium velocities
+               velt(i) = 0.0
+               veltt(i)= 0.0
+               dx(i)   = dx(nznp)
+            enddo
+
+         else
+            do i= 1, 5
+               rho(nznp+i)  = rho(nznp)
+               rhoe(nznp+i) = rhoe(nznp)
+               rhopr(nznp+i)= rho(nznp) - rhoe(nznp)
+               vel(nznp+i)  = vel(nznp)
+               velt(nznp+i) = velt(nznp)
+               veltt(nznp+i)= veltt(nznp)
+               p(nznp+i)    = p(nznp)
+               f(nznp+i)    = f(nznp)
+               dx(nznp+i)    = dx(nznp)
+            enddo
+         endif
 
 !Spherical SHOCK REFLECTION TEST 
 !in spherical or cylindrical coordinates copy left boundary values and reflect velocity

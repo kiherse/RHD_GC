@@ -138,7 +138,7 @@
 
       real(4), allocatable :: scr_pres(:,:,:), scr_dens(:,:,:), scr_temp(:,:,:)
       type(Tbounds), allocatable :: xcortex(:,:,:), ycortex(:,:,:), zcortex(:,:,:)
-      
+
 !--------------------------------------------------------------------------BEGIN
       
       ! Process the command line
@@ -391,6 +391,8 @@
             enddo
          enddo
       endif
+
+!-------------------------------------------- STARTING/RESTARTING THE SIMULATION
 
 !-------------------------------------------- STARTING/RESTARTING THE SIMULATION
 
@@ -685,264 +687,31 @@
       
       deallocate (scr_dens, scr_temp)
 
-!-------------------------------------------------------------- TIME EVOLUTION
+           ! TAKE INITIAL CONDITIONS SNAPSHOT
+           call restrt( basenm, 0, mn6, mn5, mn1, mnx1, mnx5, &
+           mny1, mny5, mnz1, mnz5, freqpl, dtini,             &
+           H_openr, H_opend, rst_file, rst_rec, rst_filed,    &
+           datfil, rstfil, outfil, tdlfil, suffixd, suffix,   &
+           nrst, nout1,                                       & 
+           nx, nxo, ny0, ny, nyold, nyh, nz, nzo, nyt,        &
+           nxtot, nytot, nztot,                               &
+           nsdim, igodu, igeomx, igeomy, igeomz, nstep,       &
+           bndmxz, bndmny, bndmxy, bndmnz, bndmxx, bndmnx,    &
+           small, epsiln, omg1, omg2, boundPosY,              &
+           dt, dk1, dk2, psh1, psh2, temb, machb, csb2,       &
+           nn, mm1, mm2, tem0, tem1,                          &          
+           oang, ipr, ms, nmod, A0, fra, frs, pha,            &
+           dely, delz, tout1, trst, gamma_ad,                 &
+           gridlx, gridly, gridlz, pb, rhob, rhoeb, velb,     &
+           timej, grav, rhoa, pa, dpady, uwi, vwi, vk,        &
+           radius, cdenst, shift, fg, rm, brt, rorb,          &
+           t0, t1, vptbd, rptbd, pptbd, alpn, betn, gamn,     &
+           rbn, m_0, R_b, c, pc, rho_0a, q0, me, mp,          &
+           xznl, xzn, xznr, yznl, yzn, yznr, zznl, zzn, zznr, &
+           delx, iextrax, iextraz, gridlx2, gridlz2,          &
+           nx2, nz2, ixsym, izsym, ncl, ic, jc, kc, mclouds,  &
+           physic, xCPUs, yCPUs, zCPUs  )
 
-      ! Time interval between time delay data files
-      iwrtd = 0
-      if (itdelay == 1) then
-         iwrtd = 1
-         dtimed = gridly/REAL(nyh)
-         if (cartrank == 0) then
-            write(6,*) 'Time interval between time delay files: ', dtimed
-         endif
-      endif
-
-      timed = timej + dt
-      nout1 = 0
-      tout1 = 0.0
-      nrst  = 0
-      trst  = 0.0
-
-      if (irk==2) then
-         alpha_R = 2.0
-         beta_R  = 1.0
-      else
-         alpha_R = 4.0
-         beta_R  = 3.0
-      endif
-
-      nstep   = nbegin
-      NoSalir = .TRUE.
-      final   = 0
-      nys = ny
-
-      call par_barrier( )
-
-      ! if (mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1) then
-      !    print*,'------------ MAIN: before main loop ---------------'
-      !    print*,'Time step: ',nstep
-      !    print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell 324 217 217'                                                        
-      !    print*,'Density and conserved density: ',physic(365,146,249)%densty,physic(365,146,249)%denstw
-      !    print*,'Pressure: ',physic(365,146,249)%pres
-      !    print*,'Internal energy: ',physic(365,146,249)%eps
-      !    print*,'Velocity: ',physic(365,146,249)%velx,physic(365,146,249)%vely,physic(365,146,249)%velz
-      !    print*,'Energy: ',physic(365,146,249)%energy
-      !    print*,'Moment: ',physic(365,146,249)%momenx,physic(365,146,249)%momeny,physic(365,146,249)%momenz
-      !    print*,'----------------------------------------------------'
-      ! endif
-
-      !------------------------------------------ START MAIN LOOP
-
-      DO WHILE (nstep <= nend .AND. NoSalir )
-
-         timej = timej + dt
-         nout1 = nout1 + 1
-         tout1 = tout1 + dt
-         nrst  = nrst  + 1
-         trst  = trst  + dt
-
-         IF (timej > tmax) THEN
-            NoSalir = .FALSE.
-            final = 1
-         ELSE
-            NoSalir = .TRUE.
-
-            do k= 1, nz
-               do j= 1, ny
-                  do i= 1, nx
-                     physic(i,j,k)%omomenx = physic(i,j,k)%momenx
-                     physic(i,j,k)%omomeny = physic(i,j,k)%momeny
-                     physic(i,j,k)%omomenz = physic(i,j,k)%momenz
-                     physic(i,j,k)%oenergy = physic(i,j,k)%energy
-                     physic(i,j,k)%odenstw = physic(i,j,k)%denstw
-                     physic(i,j,k)%odenstew = physic(i,j,k)%denstew
-                     physic(i,j,k)%opres   = physic(i,j,k)%pres
-                     physic(i,j,k)%otracer = physic(i,j,k)%tracer
-                     
-                     if (physic(i,j,k)%denstw <=0. .or. physic(i,j,k)%energy <= 0. .or.  &
-                          physic(i,j,k)%pres <= 0.) then
-                        print*,mpi_coords(1),mpi_coords(2),mpi_coords(3),i,j,k
-                        print*,physic(i,j,k)%densty,physic(i,j,k)%denstye,physic(i,j,k)%pres
-                        stop
-                     endif
-                  enddo
-               enddo
-            enddo
-
-            ! Runge-Kutta loop
-            DO rkin= 1, irk
-
-               call intercambiaBoundPhysic( physic, nx, ny, nz, mnx5, mny5, mnz5, bndmny, bndmxy  )
-
-               ! if (mod(nstep,50) == 0  .and. rkin==1 .and. mpi_coords(1)==0 .and. mpi_coords(2)==0 .and. mpi_coords(3)==1) then
-               !    print*,'------------- MAIN: before sweeps ----------------'
-               !    print*,'Time step:', nstep
-               !    print*,'Rkin:', rkin
-               !    print*,'Nodes ',mpi_coords(1),mpi_coords(2),mpi_coords(3),'and cell 324 217 217'                                                        
-               !    print*,'Density and conserved density: ',physic(365,146,249)%densty,physic(365,146,249)%denstw
-               !    print*,'Pressure: ',physic(365,146,249)%pres
-               !    print*,'Internal energy: ',physic(365,146,249)%eps
-               !    print*,'Velocity: ',physic(365,146,249)%velx,physic(365,146,249)%vely,physic(365,146,249)%velz
-               !    print*,'Energy and conserved energy: ',physic(365,146,249)%energy
-               !    print*,'Moment: ',physic(365,146,249)%momenx,physic(365,146,249)%momeny,physic(365,146,249)%momenz
-               !    print*,'----------------------------------------------------'
-               ! endif
-               
-               call sweeps(basenm, rkin, igodu, igeomx, igeomy, igeomz,            &
-               bndmnx, bndmxx, bndmny, bndmxy, bndmnz, bndmxz,       &
-               nx, nz, nsdim, ny, nys, xyswp, mnx5, mny5, mnz5,      &
-               alpha_R, beta_R, gamma_ad, dt,                        &
-               timej, t0, t1, mm1, mm2, nn, brt,  vptbd, rptbd,      &
-               pptbd, ms, delx, dk1, dk2, pb, psh1, psh2, rhob,      &
-               rhoeb, velb, small, smlrho,                           &
-               epsiln, omg1, omg2, uwi, vwi, shift, rorb,            &
-               R_b, meff, rho_0a, me, mp, KB1,                       &
-               KB2, c, pc, m_0, kb, mloss0, tem0, tem1, rm, fg,      &
-               nmod, ipr, A0, gridly, fra, frs, pha, pa, rhoa,       &
-               xznl, xzn, xznr, yznl, yzn, yznr, zznl, zzn, zznr,    &
-               boundPosX, boundPosY, boundPosZ, grav, physic, curth, &
-               xcortex, ycortex, zcortex )
-
-               ! Newton-Raphson for recovering the physical variables
-               call getprfq3d( basenm, nx, ny, nz, mnx1, mnx5, mny5, mnz1, mnz5,     &
-                        small, smallp, vwi, vk, timej,            &
-			                vwp, rhowp, uwp, yc, me, mp,             &
-			               rkin, xzn, yzn, zzn, physic )
-
-            ENDDO
-
-            ! FINAL OF THE TIME EVOLUTION
-            if (final == 1) then
-#ifdef HDF
-               call restrt( basenm, 0, mn6, mn5, mn1, mnx1, mnx5, &
-               mny1, mny5, mnz1, mnz5, freqpl, dtini,             &
-               H_openr, H_opend, rst_file, rst_rec, rst_filed,    &
-               datfil, rstfil, outfil, tdlfil, suffixd, suffix,   &
-               nrst, nout1,                                       & 
-               nx, nxo, ny0, ny, nyold, nyh, nz, nzo, nyt,        &
-               nxtot, nytot, nztot,                               &
-               nsdim, igodu, igeomx, igeomy, igeomz, nstep,       &
-               bndmxz, bndmny, bndmxy, bndmnz, bndmxx, bndmnx,    &
-               small, epsiln, omg1, omg2, boundPosY,              &
-               dt, dk1, dk2, psh1, psh2, temb, machb, csb2,       &
-               nn, mm1, mm2, tem0, tem1,                          &          
-               oang, ipr, ms, nmod, A0, fra, frs, pha,            &
-               dely, delz, tout1, trst, gamma_ad,                 &
-               gridlx, gridly, gridlz, pb, rhob, rhoeb, velb,     &
-               timej, grav, rhoa, pa, dpady, uwi, vwi, vk,        &
-               radius, cdenst, shift, fg, rm, brt, rorb,          &
-               t0, t1, vptbd, rptbd, pptbd, alpn, betn, gamn,     &
-               rbn, m_0, R_b, c, pc, rho_0a, q0, me, mp,          &
-               xznl, xzn, xznr, yznl, yzn, yznr, zznl, zzn, zznr, &
-               delx, iextrax, iextraz, gridlx2, gridlz2,          &
-               nx2, nz2, ixsym, izsym, ncl, ic, jc, kc, mclouds,  &
-               physic, xCPUs, yCPUs, zCPUs  )
-#endif 
-               NoSalir = .FALSE.
-            endif
-
-            ! TIME STEPS FOR TAKEN A SNAPSHOT (trstrt)
-            if (nrst >= nrstrt .OR. trst >= trstrt) then
-#ifdef HDF
-               call restrt( basenm, 0, mn6, mn5, mn1, mnx1, mnx5, &
-               mny1, mny5, mnz1, mnz5, freqpl, dtini,             &
-               H_openr, H_opend, rst_file, rst_rec, rst_filed,    &
-               datfil, rstfil, outfil, tdlfil, suffixd, suffix,   &
-               nrst, nout1,                                       & 
-               nx, nxo, ny0, ny, nyold, nyh, nz, nzo, nyt,        &
-               nxtot, nytot, nztot,                               &
-               nsdim, igodu, igeomx, igeomy, igeomz, nstep,       &
-               bndmxz, bndmny, bndmxy, bndmnz, bndmxx, bndmnx,    &
-               small, epsiln, omg1, omg2, boundPosY,              &
-               dt, dk1, dk2, psh1, psh2, temb, machb, csb2,       &
-               nn, mm1, mm2, tem0, tem1,                          &          
-               oang, ipr, ms, nmod, A0, fra, frs, pha,            &
-               dely, delz, tout1, trst, gamma_ad,                 &
-               gridlx, gridly, gridlz, pb, rhob, rhoeb, velb,     &
-               timej, grav, rhoa, pa, dpady, uwi, vwi, vk,        &
-               radius, cdenst, shift, fg, rm, brt, rorb,          &
-               t0, t1, vptbd, rptbd, pptbd, alpn, betn, gamn,     &
-               rbn, m_0, R_b, c, pc, rho_0a, q0, me, mp,          &
-               xznl, xzn, xznr, yznl, yzn, yznr, zznl, zzn, zznr, &
-               delx, iextrax, iextraz, gridlx2, gridlz2,          &
-               nx2, nz2, ixsym, izsym, ncl, ic, jc, kc, mclouds,  &
-               physic, xCPUs, yCPUs, zCPUs  )          
-#endif
-            endif
-
-            ! Write test output file (O)
-            if ((nsdim == 1 .OR. basenm == 'RSCH' .OR. basenm == 'GSCH' .OR.   &
-            basenm == 'GSSR' .OR. basenm == 'ESSR' .OR. basenm == 'RSSR') &
-            .AND. (nout1 >= nout .OR. tout1 >= tout)) then
-               call pltout( basenm, nsdim, nx, ny, nz, mnx5, mny5, mnz5, &
-               igeomx, nstep, gamma_ad, dt, timej,                 &
-               xznl, xzn, xznr, yznl, yzn, yznr, zzn, physic,      &
-               rstfil, outfil, tdlfil, datfil, suffix, suffixd,    &
-               nout1, tout1 )
-            endif
-
-            ! Write time delay files
-            if (itdelay == 1 .AND. iwrtd == 1) then
-               ny = ny0
-               call tdelay( basenm, igeomx, igeomy, igeomz, nx, ny, nz, &
-               mnx1, mnx5, mny1, mny5, mnz1, mnz5, nstep, timej, gamma_ad,    &
-               gridlx, gridly, gridlz, xznl, yznl, zznl, physic,  &
-               datfil, rstfil, outfil, tdlfil, suffixd, suffix )
-
-               if (cartrank == 0) then
-                  write(6,*) 'MAIN: File for time delay', & 
-                  'printed at time ', & 
-                  timej
-               endif
-               timed = timed + dtimed
-               iwrtd = 0
-            endif
-
-            ! NEW TIME STEP VALUE
-            call tstep( basenm, nx, ny, nz, mnx5, mny5, mnz5, nsdim,   &
-            igeomy, itstp, nstep, timej, cfl,                          &
-            meff, R_b, rho_0a, kb, me, mp, c, m_0,                     &
-            xznl, xznr, xzn, yznl, yznr, zznl, zznr, physic, dt)
-
-            ! Check whether we need to add any time delay
-            if (itdelay == 1) then
-               dt = MIN(dt, dtimed)
-               if ((cartrank == 0) .AND. (dt == dtimed)) then
-                  write(6,*) 'MAIN: Time step reset to ', dt
-               endif
-
-               if (timej+dt >= timed) then
-                  dt = timed - timej
-                  if (cartrank == 0) then
-                     write(6,*) 'MAIN: Time step reset to ', dt
-                  endif
-                  iwrtd = 1
-               endif
-            endif
-
-            ! NEXT STEP (iterative variable controlling the loop)
-            nstep = nstep + 1
-            
-         ENDIF
-      ENDDO
-
-      call par_barrier( )
-      if (cartrank .ne. 0) then
-         call freeWAMemorySpace( )
-         
-         deallocate( xznl, xzn, xznr, &
-         yznl, yzn, yznr,        &
-         zznl, zzn, zznr,        &
-         rhoa, pa, dpady,        &
-         grav )
-         deallocate( physic )
-         deallocate( boundPosX, boundPosY, boundPosZ ) 
-         deallocate( xcortex, ycortex, zcortex )
-      endif
-
-      call par_end()
-      print*, 'MAIN, END', cartrank
-      
-!----------------------------------------------------------------------------END
+!=======================================================
 
       END PROGRAM RATPENAT

@@ -489,12 +489,9 @@
                   physic(i,j,k)%eps     = epsco
                   physic(i,j,k)%denstw  = physic(i,j,k)%densty * scrch1(i)
                   physic(i,j,k)%denstew = physic(i,j,k)%denstye * scrch1(i)
-                  physic(i,j,k)%momenx  = physic(i,j,k)%denstw * h_s(1) &
-                                          * scrch1(i) * physic(i,j,k)%velx
-                  physic(i,j,k)%momeny  = physic(i,j,k)%denstw * h_s(1) &
-                                          * scrch1(i) * physic(i,j,k)%vely
-                  physic(i,j,k)%momenz  = physic(i,j,k)%denstw * h_s(1) &
-                                          * scrch1(i) * physic(i,j,k)%velz
+                  physic(i,j,k)%momenx  = 0.0
+                  physic(i,j,k)%momeny  = 0.0
+                  physic(i,j,k)%momenz  = 0.0
                   physic(i,j,k)%energy  = physic(i,j,k)%denstw * h_s(1) &
                                           * scrch1(i) - physic(i,j,k)%pres   &
                                           - physic(i,j,k)%denstw

@@ -147,6 +147,7 @@
                   reboun= rptbd/rhob * rhoeb
                   pboun = pptbd
                endif
+
                rho(i)  = rboun
                irho    = 1.0 /rho(i) 
                rhoe(i) = reboun
@@ -171,7 +172,7 @@
                   p(i)    = p(fznp)
                   f(i)    = 0.0
                   dx(i)   = dx(fznp)
-!               endif
+
             endif
          enddo
 
@@ -339,55 +340,42 @@
                   pboun = pptbd
                endif
 
-!               gamm1 = 1.0 / (gamma_ad - 1.0)                                                              
                rho(i)  = rboun
-               irho    = 1.0 /rho(i)
+               irho    = 1.0 /rho(i) 
                rhoe(i) = reboun
                rhopr(i)= rho(i) - rhoe(i)
-               vel(i)  = vboun!/(1.+timej-5784.5)**2                                                        
-!               velt(i) = 0.0                                                                               
-!               veltt(i)= 0.0                                                                               
-!               vel(i)  = 0.5/(timej-12000.)**2                                                             
+               vel(i)  = vboun                                                            
 
                if (xzn(l) > 0. .and. zzn(j) > 0.) then
-                  velt(i) = 0.1/sqrt(2.)*velb*sin(atan(zzn(j)/xzn(l))) !+ &
-!                        vel(i)*0.000025*(cos(0.0001*timej)+cos(0.05*timej)+cos(0.1*timej)+cos(0.5*timej))   
-                  veltt(i)= 0.1/sqrt(2.)*velb*cos(atan(zzn(j)/xzn(l))) !+ &
-!                        vel(i)*0.000025*(sin(0.0001*timej)+sin(0.05*timej)+sin(0.1*timej)+sin(0.5*timej))     
+                  velt(i) = 0.1/sqrt(2.)*velb*sin(atan(zzn(j)/xzn(l)))   
+                  veltt(i)= 0.1/sqrt(2.)*velb*cos(atan(zzn(j)/xzn(l)))     
                else if (xzn(l) < 0. .and. zzn(j) > 0.) then
-                  velt(i) = 0.1/sqrt(2.)*velb*sin(atan(abs(zzn(j)/xzn(l)))) !+ &                                                                             
-!                        vel(i)*0.000025*(cos(0.0001*timej)+cos(0.05*timej)+cos(0.1*timej)+cos(0.5*timej))                                                   
-                  veltt(i)= -0.1/sqrt(2.)*velb*cos(atan(abs(zzn(j)/xzn(l)))) !+ &                                                                             
-!                        vel(i)*0.000025*(sin(0.0001*timej)+sin(0.05*timej)+sin(0.1*timej)+sin(0.5*timej))      
+                  velt(i) = 0.1/sqrt(2.)*velb*sin(atan(abs(zzn(j)/xzn(l))))
+                  veltt(i)= -0.1/sqrt(2.)*velb*cos(atan(abs(zzn(j)/xzn(l))))
                else if (xzn(l) < 0. .and. zzn(j) < 0.) then
-                  velt(i) = -0.1/sqrt(2.)*velb*sin(atan(abs(zzn(j)/xzn(l)))) !+ &                                                 
-!                        vel(i)*0.000025*(cos(0.0001*timej)+cos(0.05*timej)+cos(0.1*timej)+cos(0.5*timej))                                                   
-                  veltt(i)= -0.1/sqrt(2.)*velb*cos(atan(abs(zzn(j)/xzn(l)))) !+ &                                                                           
-!                        vel(i)*0.000025*(sin(0.0001*timej)+sin(0.05*timej)+sin(0.1*timej)+sin(0.5*timej))    
+                  velt(i) = -0.1/sqrt(2.)*velb*sin(atan(abs(zzn(j)/xzn(l))))
+                  veltt(i)= -0.1/sqrt(2.)*velb*cos(atan(abs(zzn(j)/xzn(l))))
                else if (xzn(l) > 0. .and. zzn(j) < 0.) then
-                  velt(i) = -0.1/sqrt(2.)*velb*sin(atan(abs(zzn(j)/xzn(l)))) !+ &   
-!                        vel(i)*0.000025*(cos(0.0001*timej)+cos(0.05*timej)+cos(0.1*timej)+cos(0.5*timej))                                                   
-                  veltt(i)= 0.1/sqrt(2.)*velb*cos(atan(abs(zzn(j)/xzn(l)))) !+ &                            
-!                        vel(i)*0.000025*(sin(0.0001*timej)+sin(0.05*timej)+sin(0.1*timej)+sin(0.5*timej))                                                    
+                  velt(i) = -0.1/sqrt(2.)*velb*sin(atan(abs(zzn(j)/xzn(l))))                                          
+                  veltt(i)= 0.1/sqrt(2.)*velb*cos(atan(abs(zzn(j)/xzn(l))))                                                   
                endif
 
-               p(i)    = p(fznp)
-               f(i)    = f(fznp)
-               dx(i)   = dx(fznp)
-!               endif                                                                                       
+               p(i)    = pboun
+               f(i)    = 1.0 !tracer
+               dx(i)   = dx(fznp)                                                                                   
  
             else
-
+            
                rho(i)  = rho(fznp)
                rhoe(i)  = rhoe(fznp)
                rhopr(i)= rho(i) - rhoe(i)
-               vel(i)  = -vel(fznp)
-               velt(i) = velt(fznp)
-               veltt(i)= veltt(fznp)
+               vel(i)  = 0.0
+               velt(i) = 0.0
+               veltt(i)= 0.0
                p(i)    = p(fznp)
-               f(i)    = f(fznp)
-               dx(i)   = dx(fznp)
-!               endif                                                                                                                      
+               f(i)    = 0.0
+               dx(i)   = dx(fznp)      
+
             endif
          enddo
 

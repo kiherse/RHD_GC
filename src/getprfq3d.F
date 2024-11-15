@@ -116,19 +116,6 @@ subroutine getprfq3d( basenm, nx, ny, nz, mnx1, mnx5, mny5, mnz1, mnz5,     &
         pmin(i)     = max( sqrt(momenx_s(i)**2+momeny_s(i)**2+momenz_s(i)**2)   &  
                      - energy_s(i) - denstw_s(i), smallp)
 
-         ! if ((mpi_coords(1) == 0 .and. mpi_coords(2) == 0 .and. mpi_coords(3) == 1)  &
-         ! .and. (i==242 .and. j==61 .and. k==57)) then
-         !    print*,'------------------------------------------------------------------------'
-         !    print*,'Getprfq: Momentum (242,61,57) = ',momenx_s(i),momeny_s(i),momenz_s(i)
-         !    print*,'Getprfq: Energy (242,61,57) = ', energy_s(i)
-         !    print*,'Getprfq: Conserved density (242,61,57) = ', denstw_s(i)
-         !    print*,'Getprfq: Pmin_expression (242,61,57) = ', sqrt(momenx_s(i)**2+momeny_s(i)**2+momenz_s(i)**2) - energy_s(i) - denstw_s(i)
-         !    print*,'Getprfq: Smallp (242,61,57) = ', smallp
-         !    print*,'Getprfq: Pmin (242,61,57) = ', pmin(i)
-         !    print*,'Getprfq: (1.67-1)Energy (242,61,57) = ', (1.6666667d0-1.0)*energy_s(i)
-         !    print*,'------------------------------------------------------------------------'  
-         ! endif
-
         tem_s(i)    =  physic(i,j,k)%pres / (physic(i,j,k)%densty*              &
                       (xe_s(i)/me + (1.0-xe_s(i))/mp))                
 
@@ -151,6 +138,8 @@ subroutine getprfq3d( basenm, nx, ny, nz, mnx1, mnx5, mny5, mnz1, mnz5,     &
             print*,'Temperature [code, K]:', tem_s(i)
             print*,'mpi_coords:',mpi_coords(1), mpi_coords(2), mpi_coords(3)
             print*,'i,j,k:',i,j,k
+            print*,'nele,it,errmax,errlim,itmax: ', nele,it,errmax,errlim,itmax
+            print*,'vel: ', physic(i,j,k)%velx, physic(i,j,k)%vely, physic(i,j,k)%velz
 
             !print*,tid,i,j,k,nele,pmin(i)
             lista(1,nl) = i
@@ -177,11 +166,11 @@ subroutine getprfq3d( basenm, nx, ny, nz, mnx1, mnx5, mny5, mnz1, mnz5,     &
         it=it+1
         do i = 1, nx     
           v2(i) = energy_s(i) + denstw_s(i) + p_s(i)
-	  v2(i) = ( momenx_s(i)*momenx_s(i) + momeny_s(i)*momeny_s(i) + momenz_s(i)*momenz_s(i)) & 
+	       v2(i) = ( momenx_s(i)*momenx_s(i) + momeny_s(i)*momeny_s(i) + momenz_s(i)*momenz_s(i)) & 
                   / (v2(i)*v2(i))
-	  w(i) = 1.0/sqrt(1.0-v2(i))
-	  rho_s(i) = denstw_s(i)/w(i)
-	  eps_s(i) = ( energy_s(i) + denstw_s(i)*(1.0-w(i)) +  &
+         w(i) = 1.0/sqrt(1.0-v2(i))
+         rho_s(i) = denstw_s(i)/w(i)
+         eps_s(i) = ( energy_s(i) + denstw_s(i)*(1.0-w(i)) +  &
                      p_s(i)*(1.0-w(i)*w(i)) ) / (denstw_s(i)*w(i))
           op_s(i) = p_s(i)
 
@@ -196,6 +185,12 @@ subroutine getprfq3d( basenm, nx, ny, nz, mnx1, mnx5, mny5, mnz1, mnz5,     &
             lista(3,nl) = k
             eps_s(i) = physic(i,j,k)%eps
 
+            print*,'----------- Getprfq:  Negative EPS problem ----------------------------'
+            print*,'Cells ', i, j, 'in mpi_coords ',mpi_coords(1), mpi_coords(2), mpi_coords(3)
+            print*,'nele, it, eps_s: ', nele,it,eps_s(i)
+            print*,'vel: ', physic(i,j,k)%velx, physic(i,j,k)%vely, physic(i,j,k)%velz
+            print*,'------------------------------------------------------------------------' 
+
             physic(i,j,k)%velx   = 0.0
             physic(i,j,k)%vely   = 0.0
             physic(i,j,k)%velz   = 0.0
@@ -203,7 +198,6 @@ subroutine getprfq3d( basenm, nx, ny, nz, mnx1, mnx5, mny5, mnz1, mnz5,     &
             physic(i,j,k)%tracer  = 0.0
             physic(i,j,k)%eps    = 0.0
 
-            print*,'eps',i,j,k,nele,it,eps_s(i),mpi_coords(1), mpi_coords(2), mpi_coords(3)
           endif
         enddo
 
@@ -214,49 +208,62 @@ subroutine getprfq3d( basenm, nx, ny, nz, mnx1, mnx5, mny5, mnz1, mnz5,     &
 
         do i=1, nx 
           f(i) = p_s(i) - op_s(i)
-	  df(i) = v2(i)*cs_s(i)*cs_s(i) - 1.0
+	       df(i) = v2(i)*cs_s(i)*cs_s(i) - 1.0
           p_s(i) = op_s(i) - f(i)/df(i)
-	  relerr(i) = abs((p_s(i)-op_s(i))/op_s(i))   
+	       relerr(i) = abs((p_s(i)-op_s(i))/op_s(i))   
 
- 	  if (relerr(i) > errmax) then
-                if (i /= lista(1,nl) .or. j /= lista(2,nl) .or. k /= lista(3,nl)) then
-                   errmax = relerr(i)
-                endif
-	  endif
- 	  if( errmax > errlim .and. it == itmax ) then
+            if (relerr(i) > errmax) then
                if (i /= lista(1,nl) .or. j /= lista(2,nl) .or. k /= lista(3,nl)) then
-                  print*,'pres',i,j,k,nele,it,p_s(i),mpi_coords(1), mpi_coords(2), mpi_coords(3)  
+                  errmax = relerr(i)
+               endif
+            endif
+
+            if( errmax > errlim .and. it == itmax ) then
+               if (i /= lista(1,nl) .or. j /= lista(2,nl) .or. k /= lista(3,nl)) then  
                   nele = nele+1
                   nl=nele
                   lista(1,nl) = i
                   lista(2,nl) = j
                   lista(3,nl) = k
                endif
-            p_s(i) = smallp
-         endif
 
-	enddo
+               print*,'------------- Getprfq3d (non convergence): errmax and itmax ---------------------'
+               print*,'Cell',i,j,k, 'at', mpi_coords(1), mpi_coords(2), mpi_coords(3)
+               print*,'nele,it,errmax,errlim,itmax: ', nele,it,errmax,errlim,itmax
+               print*,'vel: ', physic(i,j,k)%velx, physic(i,j,k)%vely, physic(i,j,k)%velz
+               print*,'---------------------------------------------------------------------------------'
+
+               p_s(i) = smallp
+
+            endif
+
+         enddo
       ENDDO
 
       if (errmax > errlim) then
-         print*,'getprfq3d', 'non convergence',mpi_coords(1), mpi_coords(2), mpi_coords(3)
-
+         print*,'------------------ Getprfq3d (non convergence): errmax ------------------------'
+         print*,'Cell',i,j,k, 'at', mpi_coords(1), mpi_coords(2), mpi_coords(3)
+         print*,'nele,it,errmax,errlim,itmax: ', nele,it,errmax,errlim,itmax
+         print*,'vel: ', physic(i,j,k)%velx, physic(i,j,k)%vely, physic(i,j,k)%velz
+         print*,'---------------------------------------------------------------------------------'
       endif
       
 
-!       ++++++++++++++ end of iteration ++++++++++++
+      !++++++++++++++ end of iteration ++++++++++++
       do i=1,nx
-        physic(i,j,k)%pres = p_s(i)
-	physic(i,j,k)%opres = p_s(i)
-	physic(i,j,k)%densty = rho_s(i)
-        physic(i,j,k)%denstye = xe_s(i)*rho_s(i)
-	physic(i,j,k)%eps = eps_s(i)
-	physic(i,j,k)%velx = momenx_s(i)/(energy_s(i)+denstw_s(i)+p_s(i))
-	physic(i,j,k)%vely = momeny_s(i)/(energy_s(i)+denstw_s(i)+p_s(i))
-	physic(i,j,k)%velz = momenz_s(i)/(energy_s(i)+denstw_s(i)+p_s(i))
+         physic(i,j,k)%pres = p_s(i)
+         physic(i,j,k)%opres = p_s(i)
+         physic(i,j,k)%densty = rho_s(i)
+         physic(i,j,k)%denstye = xe_s(i)*rho_s(i)
+         physic(i,j,k)%eps = eps_s(i)
+      	physic(i,j,k)%velx = momenx_s(i)/(energy_s(i)+denstw_s(i)+p_s(i))
+         physic(i,j,k)%vely = momeny_s(i)/(energy_s(i)+denstw_s(i)+p_s(i))
+         physic(i,j,k)%velz = momenz_s(i)/(energy_s(i)+denstw_s(i)+p_s(i))
       enddo
+
     enddo
    enddo
+
 !$OMP END DO
 !$OMP END PARALLEL
 
@@ -494,11 +501,13 @@ subroutine getprfq3d( basenm, nx, ny, nz, mnx1, mnx5, mny5, mnz1, mnz5,     &
                 physic(i,j,k)%pres  = p_so
             
                 physic(i,j,k)%eps   = eps_so
-            
-                print*,'----------'
-                print*,'Recovery:'
-                print*,'nuproc,i,j,nve,p_so:'
-                print*,nuproc,i,j,nve,p_so
+
+                  print*,'------------------------- Getprfq: recovery ----------------------------'
+                  print*,'mpi_coords:',mpi_coords(1), mpi_coords(2), mpi_coords(3)
+                  print*,'nele: ', nele
+                  print*,'nuproc,i,j,nve,p_so:',nuproc,i,j,nve,p_so
+                  print*,'vel: ', physic(i,j,k)%velx, physic(i,j,k)%vely, physic(i,j,k)%velz
+                  print*,'------------------------------------------------------------------------' 
             
                 physic(i,j,k)%opres = physic(i,j,k)%pres
                 
